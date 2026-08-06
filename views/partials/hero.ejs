@@ -1,0 +1,43 @@
+<section class="container mx-auto px-4 mt-6">
+    <div class="swiper mainHeroSwiper rounded-[40px] overflow-hidden shadow-lg">
+        <div class="swiper-wrapper">
+            
+            <% banners.forEach(banner => { %>
+                <!-- h-[350px] md:h-[500px] দিয়ে মোবাইল ও পিসির জন্য আলাদা হাইট সেট করা হয়েছে -->
+                <div class="swiper-slide h-[250px] md:h-[420px] p-6 md:p-16 text-white 
+                text-center flex flex-col justify-center 
+                items-center bg-cover bg-center bg-no-repeat relative" 
+                     style="background-image: url('<%= banner.bUrl %>');" onclick="window.location.href='<%= banner.btnUrl || '#' %>'">
+                    
+                    <!-- ট্যাগ -->
+                    <% if (banner.tag) { %>
+                        <span class="royal-red font-bold tracking-[4px] md:tracking-[6px] uppercase text-[10px] mb-3">
+                            <%= banner.tag %>
+                        </span>
+                    <% } %>
+                    
+                    <!-- টাইটেল -->
+                    <% if (banner.title) { %>
+                        <h2 class="text-3xl 
+                         md:text-6xl font-extrabold mb-6 brand-font uppercase">
+                            <%- banner.title %>
+                        </h2>
+                    <% } %>
+
+                    <!-- বাটন -->
+                    <% if (banner.btnText) { %>
+                        <button class="bg-red-500 text-white px-8 md:px-12 py-3 shadow-lg shadow-slate-500/50
+                        md:py-4 rounded-full font-bold text-xs uppercase tracking-widest 
+                        transition-all cursor-pointer shadow-lg bottom-14 absolute" 
+                                onclick="window.location.href='<%= banner.btnUrl || '#' %>'">
+                            <%= banner.btnText %>
+                        </button>
+                    <% } %>
+                    
+                </div>
+            <% }) %>
+
+        </div>
+        <div class="swiper-pagination"></div>
+    </div>
+</section>

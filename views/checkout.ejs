@@ -14,10 +14,34 @@
                     <label class="block text-sm font-semibold text-gray-700">Phone Number</label>
                     <input type="tel" id="phone" required class="w-full mt-1 px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-black">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">Full Address</label>
-                    <textarea id="address" required rows="3" class="w-full mt-1 px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-black"></textarea>
+
+                <!-- 📍 ডাইনামিক বিভাগ, জেলা ও উপজেলা ড্রপডাউন সেকশন -->
+                <div class="space-y-3">
+                    <label class="block text-sm font-semibold text-gray-700">Delivery Address</label>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                            <select id="division" required class="w-full px-3 py-2.5 border rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-black">
+                                <option value="">-- বিভাগ নির্বাচন --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="district" required disabled class="w-full px-3 py-2.5 border rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-black disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                <option value="">-- জেলা নির্বাচন --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="upazila" required disabled class="w-full px-3 py-2.5 border rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-black disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                <option value="">-- উপজেলা নির্বাচন --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <input type="text" id="detailed-address" required placeholder="বাসা/হোল্ডিং নম্বর, রোড, এলাকা (যেমন: মিরপুর ১০)" class="w-full mt-1 px-4 py-3 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-black">
+                    </div>
                 </div>
+
                 <button type="submit" class="w-full bg-black text-white py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg cursor-pointer">
                     Place Order
                 </button>
@@ -26,8 +50,7 @@
             <div class="bg-gray-50 p-6 rounded-xl border flex flex-col justify-between">
                 <div>
                     <h4 class="text-lg font-bold mb-4">Order Summary</h4>
-                    <!-- মেমোরি এবং স্ক্রল অপ্টিমাইজেশনের জন্য max-h কিছুটা বাড়ানো হয়েছে সাইজ ড্রপডাউনের সুবিধার্থে -->
-                    <div id="checkout-items" class="space-y-4 mb-4 max-h-[280px] overflow-y-auto pr-1">
+                    <div id="checkout-items" class="space-y-4 mb-4 max-h-[320px] overflow-y-auto pr-1">
                     </div>
                 </div>
                 
@@ -52,34 +75,125 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // 📍 বাংলাদেশের বিভাগ, জেলা ও উপজেলার ডাটাবেজ
+    const bdLocations = {
+        "Dhaka": {
+            "Dhaka": ["Gulshan", "Banani", "Dhanmondi", "Mirpur", "Uttara", "Mohakhali", "Tejgaon", "Motijheel", "Savar", "Keraniganj", "Nawabganj", "Dohar"],
+            "Gazipur": ["Gazipur Sadar", "Kaliakair", "Kapasia", "Sreepur", "Kaliganj"],
+            "Narayanganj": ["Narayanganj Sadar", "Bandar", "Rupganj", "Araihazar", "Sonargaon"],
+            "Tangail": ["Tangail Sadar", "Sakhipur", "Basail", "Madhupur", "Ghatail", "Kalihati", "Nagarpur", "Mirzapur", "Dhanbari", "Bhuapur", "Delduar"],
+            "Kishoreganj": ["Kishoreganj Sadar", "Hossainpur", "Pakundia", "Katiadi", "Bhairab", "Itna", "Tarail", "Karimganj", "Nikli", "Kuliarchar", "Bajitpur"],
+            "Manikganj": ["Manikganj Sadar", "Singair", "Shibalaya", "Saturia", "Harirampur", "Ghior", "Daulatpur"],
+            "Munshiganj": ["Munshiganj Sadar", "Sreenagar", "Sirajdikhan", "Louhajang", "Tongibari", "Gazaria"],
+            "Faridpur": ["Faridpur Sadar", "Boalmari", "Alfadanga", "Madhukhali", "Bhanga", "Nagarkanda", "Sadarpur", "Charbhadrasan", "Saltha"],
+            "Gopalganj": ["Gopalganj Sadar", "Kashiani", "Kotalipara", "Muksudpur", "Tungipara"],
+            "Madaripur": ["Madaripur Sadar", "Shibchar", "Kalkini", "Rajoir", "Dasar"],
+            "Rajbari": ["Rajbari Sadar", "Goalundo", "Pangsha", "Baliakandi", "Kalukhali"],
+            "Shariatpur": ["Shariatpur Sadar", "Naria", "Zajira", "Gosairhat", "Bhedarganj", "Damudya"]
+        },
+        "Chattogram": {
+            "Chattogram": ["Kotwali", "Pahartali", "Panchlaish", "Bayazid", "Chandgaon", "Hathazari", "Fatikchhari", "Raozan", "Boalkhali", "Patiya", "Banshkhali", "Anwara", "Satkania", "Lohagara", "Sandwip", "Mirsharai", "Sitakunda"],
+            "Cox's Bazar": ["Cox's Bazar Sadar", "Chakaria", "Kutubdia", "Ukhia", "Teknaf", "Pekua", "Ramu", "Eidgaon"],
+            "Cumilla": ["Cumilla Sadar", "Barura", "Brahmanpara", "Burichong", "Chandina", "Chauddagram", "Daudkandi", "Homna", "Laksam", "Muradnagar", "Nangalkot", "Monohorganj", "Titas", "Meghna"],
+            "Noakhali": ["Noakhali Sadar", "Begumganj", "Chatkhil", "Companyganj", "Senbagh", "Subarnachar", "Kabirhat", "Hatiya"],
+            "Feni": ["Feni Sadar", "Daganbhuiyan", "Chhagalnaiya", "Sonagazi", "Parshuram", "Fulgazi"],
+            "Brahmanbaria": ["Brahmanbaria Sadar", "Ashuganj", "Nabinagar", "Nasirnagar", "Kasba", "Akhaura", "Bancharampur", "Bijoynagar"],
+            "Lakshmipur": ["Lakshmipur Sadar", "Raipur", "Ramganj", "Ramgati", "Kamalnagar"],
+            "Chandpur": ["Chandpur Sadar", "Haimchar", "Kachua", "Shahrasti", "Faridganj", "Matlab North", "Matlab South"],
+            "Khagrachhari": ["Khagrachhari Sadar", "Dighinala", "Panchhari", "Laxmichhari", "Mahalchhari", "Matiranga", "Ramgarh"],
+            "Bandarban": ["Bandarban Sadar", "Ali Kadam", "Naikhongchhari", "Rowangchhari", "Ruma", "Thanchi", "Lama"],
+            "Rangamati": ["Rangamati Sadar", "Belaichhari", "Bagaichhari", "Barkal", "Juraichhari", "Langadu", "Naniarchar", "Rajasthali", "Kaptai"]
+        },
+        "Rajshahi": {
+            "Rajshahi": ["Boalia", "Rajpara", "Motihar", "Paba", "Tanore", "Mohanpur", "Godagari", "Bagha", "Charghat", "Durgapur"],
+            "Bogura": ["Bogura Sadar", "Shibganj", "Sherpur", "Dhunat", "Gabtali", "Kahaloo", "Nandigram", "Sariakandi", "Sonatala", "Adamdighi", "Dupchanchia"],
+            "Pabna": ["Pabna Sadar", "Ishwardi", "Atgharia", "Chatmohar", "Bhangura", "Faridpur", "Santhia", "Sujanagar", "Bera"],
+            "Sirajganj": ["Sirajganj Sadar", "Kazipur", "Ullapara", "Shahjadpur", "Rayganj", "Tarash", "Belkuchi", "Chauhali", "Kamarkhanda"],
+            "Naogaon": ["Naogaon Sadar", "Manda", "Niamatpur", "Atrai", "Raninagar", "Patnitala", "Dhamoirhat", "Badalgachhi", "Mohadebpur", "Porsha", "Sapahar"],
+            "Natore": ["Natore Sadar", "Baraigram", "Bagatipara", "Lalpur", "Singra", "Gurudaspur"],
+            "Chapainawabganj": ["Chapainawabganj Sadar", "Gomastapur", "Nachole", "Bholahat", "Shibganj"],
+            "Joypurhat": ["Joypurhat Sadar", "Panchbibi", "Kalai", "Khetlal", "Akkelpur"]
+        },
+        "Khulna": {
+            "Khulna": ["Sonadanga", "Khalishpur", "Daulatpur", "Batiaghata", "Dacope", "Dumuria", "Dighalia", "Koyra", "Paikgachha", "Phultala", "Rupsha"],
+            "Jashore": ["Jashore Sadar", "Bagherpara", "Chaugachha", "Jhikargachha", "Keshabpur", "Monirampur", "Sharsha", "Abhaynagar"],
+            "Satkhira": ["Satkhira Sadar", "Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Shyamnagar", "Tala"],
+            "Kushtia": ["Kushtia Sadar", "Kumarkhali", "Khoksa", "Mirpur", "Bheramara", "Daulatpur"],
+            "Jhenaidah": ["Jhenaidah Sadar", "Shailkupa", "Harinakunda", "Kaliganj", "Kotchandpur", "Maheshpur"],
+            "Magura": ["Magura Sadar", "Mohammadpur", "Shalikha", "Sreepur"],
+            "Narail": ["Narail Sadar", "Lohagara", "Kalia"],
+            "Bagerhat": ["Bagerhat Sadar", "Fakirhat", "Rampal", "Mongla", "Morrelganj", "Kachua", "Chitalmari", "Sarankhola"],
+            "Chuadanga": ["Chuadanga Sadar", "Alamdanga", "Damurhuda", "Jibannagar"],
+            "Meherpur": ["Meherpur Sadar", "Gangni", "Mujibnagar"]
+        },
+        "Barishal": {
+            "Barishal": ["Barishal Sadar", "Bakerganj", "Babuganj", "Wazirpur", "Banaripara", "Gournadi", "Agailjhara", "Mehendiganj", "Muladi", "Hizla"],
+            "Patuakhali": ["Patuakhali Sadar", "Bauphal", "Dashmina", "Galachipa", "Kalapara", "Mirzaganj", "Rangabali", "Dumki"],
+            "Bhola": ["Bhola Sadar", "Burhanuddin", "Char Fasson", "Doulatkhan", "Lalmohan", "Tazumuddin", "Monpura"],
+            "Pirojpur": ["Pirojpur Sadar", "Bhandaria", "Kawkhali", "Mathbaria", "Nazirpur", "Nesarabad"],
+            "Barguna": ["Barguna Sadar", "Amtali", "Bamna", "Betagi", "Patharghata", "Taltali"],
+            "Jhalokati": ["Jhalokati Sadar", "Kathalia", "Nalchity", "Rajapur"]
+        },
+        "Sylhet": {
+            "Sylhet": ["Sylhet Sadar", "Beanibazar", "Bishwanath", "Companiganj", "Fenchuganj", "Golapganj", "Gowainghat", "Jaintiapur", "Kanaighat", "Zakiganj", "South Surma"],
+            "Moulvibazar": ["Moulvibazar Sadar", "Barlekha", "Juri", "Kamalganj", "Kulaura", "Rajnagar", "Sreemangal"],
+            "Habiganj": ["Habiganj Sadar", "Ajmiriganj", "Bahubal", "Baniachang", "Chunarughat", "Lakhai", "Madhabpur", "Nabiganj", "Shayestaganj"],
+            "Sunamganj": ["Sunamganj Sadar", "Bishwamvarpur", "Chhatak", "Derai", "Dowarabazar", "Jagannathpur", "Jamalganj", "Sullah", "Tahirpur"]
+        },
+        "Rangpur": {
+            "Rangpur": ["Rangpur Sadar", "Gangachara", "Kaunia", "Badarganj", "Mithapukur", "Pirgachha", "Pirganj", "Taraganj"],
+            "Dinajpur": ["Dinajpur Sadar", "Birganj", "Biral", "Bochaganj", "Chirirbandar", "Phulbari", "Ghoraghat", "Kaharole", "Khansama", "Nawabganj", "Parbatipur"],
+            "Gaibandha": ["Gaibandha Sadar", "Fulchhari", "Gobindaganj", "Palashbari", "Sadullapur", "Saghata", "Sundarganj"],
+            "Kurigram": ["Kurigram Sadar", "Bhurungamari", "Char Rajibpur", "Chilmari", "Phulbari", "Rajarhat", "Ulipur", "Nageshwari"],
+            "Lalmonirhat": ["Lalmonirhat Sadar", "Aditmari", "Kaliganj", "Hatibandha", "Patgram"],
+            "Nilphamari": ["Nilphamari Sadar", "Saidpur", "Jaldhaka", "Kishoreganj", "Domar", "Dimla"],
+            "Panchagarh": ["Panchagarh Sadar", "Boda", "Debiganj", "Atwari", "Tetulia"],
+            "Thakurgaon": ["Thakurgaon Sadar", "Baliadangi", "Haripur", "Ranisankail", "Pirganj"]
+        },
+        "Mymensingh": {
+            "Mymensingh": ["Mymensingh Sadar", "Bhaluka", "Dhobaura", "Fulbaria", "Gaffargaon", "Gauripur", "Haluaghat", "Ishwarganj", "Muktagachha", "Nandail", "Phulpur", "Trishal", "Tarakanda"],
+            "Jamalpur": ["Jamalpur Sadar", "Baksiganj", "Dewanganj", "Islampur", "Madarganj", "Melandaha", "Sarishabari"],
+            "Netrokona": ["Netrokona Sadar", "Atpara", "Barhatta", "Durgapur", "Kendua", "Khaliajuri", "Madan", "Mohanganj", "Purbadhala"],
+            "Sherpur": ["Sherpur Sadar", "Jhenaigati", "Nakla", "Nalitabari", "Sreebordi"]
+        }
+    };
+
     let globalFinalTotal = 0;
 
     function loadCheckout() {
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const isDirect = localStorage.getItem('isDirectCheckout') === 'true';
+        let items = [];
+
+        if (isDirect) {
+            const singleItem = JSON.parse(localStorage.getItem('checkoutItem'));
+            if (singleItem) items = [singleItem];
+        } else {
+            items = JSON.parse(localStorage.getItem('cart')) || [];
+        }
+
         const container = document.getElementById('checkout-items');
         const subtotalEl = document.getElementById('summary-subtotal');
         const shippingEl = document.getElementById('summary-shipping');
         const totalEl = document.getElementById('checkout-total');
         
-        if (cart.length === 0) {
-            window.location.href = '/cart';
+        if (items.length === 0) {
+            window.location.href = '/';
             return;
         }
 
         let subtotal = 0;
         
-        container.innerHTML = cart.map((item, index) => {
+        container.innerHTML = items.map((item, index) => {
             const rawPrice = item.regularPrice ? item.regularPrice.toString() : "0";
             const itemPrice = parseFloat(rawPrice.replace(/[^0-9.-]+/g, "")) || 0;
             const itemTotal = itemPrice * item.quantity;
             subtotal += itemTotal;
 
-            // 🏷️ প্রোডাক্টের জন্য নির্দিষ্ট সাইজ অপশনগুলো তৈরি করা হচ্ছে
             let sizeSelectHtml = '';
             if (item.sizes && item.sizes.length > 0) {
                 sizeSelectHtml = `
                     <div class="mt-1">
-                        <select onchange="updateCartItemSize(${index}, this.value)" class="size-dropdown border text-xs rounded px-2 py-1 bg-white outline-none focus:border-black font-medium text-gray-700">
+                        <select onchange="updateItemSize(${index}, this.value)" class="size-dropdown border text-xs rounded px-2 py-1 bg-white outline-none focus:border-black font-medium text-gray-700">
                             <option value="">-- Choose Size * --</option>
                             ${item.sizes.map(size => `
                                 <option value="${size}" ${item.selectedSize === size ? 'selected' : ''}>Size: ${size}</option>
@@ -95,8 +209,18 @@
                 <div class="border-b pb-3 text-sm text-gray-600">
                     <div class="flex justify-between items-start gap-2">
                         <div class="flex-1">
+                            <img src='${item.img}' class='w-16'>
                             <span class="line-clamp-1 font-medium text-gray-800">${item.title}</span>
-                            <strong class="text-black font-semibold text-xs">Qty: ${item.quantity}</strong>
+                            
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <span class="text-xs font-semibold text-gray-500">Qty:</span>
+                                <div class="inline-flex items-center border border-gray-300 rounded bg-white">
+                                    <button type="button" onclick="changeQuantity(${index}, -1)" class="px-2 py-0.5 text-gray-600 hover:bg-gray-100 font-bold">-</button>
+                                    <span class="px-2.5 text-xs font-bold text-black">${item.quantity}</span>
+                                    <button type="button" onclick="changeQuantity(${index}, 1)" class="px-2 py-0.5 text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                                </div>
+                            </div>
+
                             ${sizeSelectHtml}
                         </div>
                         <span class="whitespace-nowrap font-semibold text-gray-900 mt-0.5">৳${itemTotal.toFixed(2)}</span>
@@ -113,43 +237,138 @@
         totalEl.innerText = '৳' + globalFinalTotal.toFixed(2);
     }
 
-    // 💾 ড্রপডাউন চেঞ্জ হলে যেন লোকাল স্টোরেজেও সিলেক্টেড সাইজ সেভ হয়ে যায়
-    function updateCartItemSize(index, newSize) {
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (cart[index]) {
-            cart[index].selectedSize = newSize;
-            localStorage.setItem('cart', JSON.stringify(cart));
+    function changeQuantity(index, amount) {
+        const isDirect = localStorage.getItem('isDirectCheckout') === 'true';
+        let items = isDirect ? [JSON.parse(localStorage.getItem('checkoutItem'))] : (JSON.parse(localStorage.getItem('cart')) || []);
+
+        if (items[index]) {
+            items[index].quantity += amount;
+            if (items[index].quantity < 1) {
+                items[index].quantity = 1;
+            }
+
+            if (isDirect) {
+                localStorage.setItem('checkoutItem', JSON.stringify(items[0]));
+            } else {
+                localStorage.setItem('cart', JSON.stringify(items));
+            }
+            loadCheckout();
         }
     }
+
+    function updateItemSize(index, newSize) {
+        const isDirect = localStorage.getItem('isDirectCheckout') === 'true';
+        let items = isDirect ? [JSON.parse(localStorage.getItem('checkoutItem'))] : (JSON.parse(localStorage.getItem('cart')) || []);
+
+        if (items[index]) {
+            items[index].selectedSize = newSize;
+            if (isDirect) {
+                localStorage.setItem('checkoutItem', JSON.stringify(items[0]));
+            } else {
+                localStorage.setItem('cart', JSON.stringify(items));
+            }
+        }
+    }
+
+    // 🔄 ড্রপডাউন হ্যান্ডেল করার লজিক
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCheckout();
+
+        const divisionSelect = document.getElementById("division");
+        const districtSelect = document.getElementById("district");
+        const upazilaSelect = document.getElementById("upazila");
+
+        for (let division in bdLocations) {
+            let option = document.createElement("option");
+            option.value = division;
+            option.textContent = division;
+            divisionSelect.appendChild(option);
+        }
+
+        divisionSelect.addEventListener("change", function () {
+            const selectedDivision = this.value;
+            districtSelect.innerHTML = '<option value="">-- জেলা নির্বাচন --</option>';
+            upazilaSelect.innerHTML = '<option value="">-- উপজেলা নির্বাচন --</option>';
+            upazilaSelect.disabled = true;
+
+            if (selectedDivision && bdLocations[selectedDivision]) {
+                districtSelect.disabled = false;
+                const districts = bdLocations[selectedDivision];
+                for (let district in districts) {
+                    let option = document.createElement("option");
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                }
+            } else {
+                districtSelect.disabled = true;
+            }
+        });
+
+        districtSelect.addEventListener("change", function () {
+            const selectedDivision = divisionSelect.value;
+            const selectedDistrict = this.value;
+            upazilaSelect.innerHTML = '<option value="">-- উপজেলা নির্বাচন --</option>';
+
+            if (selectedDistrict && bdLocations[selectedDivision][selectedDistrict]) {
+                upazilaSelect.disabled = false;
+                const upazilas = bdLocations[selectedDivision][selectedDistrict];
+                
+                if(upazilas.length === 0) {
+                    let option = document.createElement("option");
+                    option.value = "Sadar";
+                    option.textContent = "Sadar";
+                    upazilaSelect.appendChild(option);
+                } else {
+                    upazilas.forEach(upazila => {
+                        let option = document.createElement("option");
+                        option.value = upazila;
+                        option.textContent = upazila;
+                        upazilaSelect.appendChild(option);
+                    });
+                }
+            } else {
+                upazilaSelect.disabled = true;
+            }
+        });
+    });
 
     document.getElementById('order-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (cart.length === 0) {
-            Swal.fire('Error', 'Your cart is empty!', 'error');
+        const isDirect = localStorage.getItem('isDirectCheckout') === 'true';
+        let items = isDirect ? [JSON.parse(localStorage.getItem('checkoutItem'))] : (JSON.parse(localStorage.getItem('cart')) || []);
+
+        if (items.length === 0) {
+            Swal.fire('Error', 'No items to checkout!', 'error');
             return;
         }
         
-        // 🚨 🔍 সাইজ ভ্যালিডেশন চেকার লুপ
-        for (let i = 0; i < cart.length; i++) {
-            // যদি প্রোডাক্টের সাইজ অপশন থাকে কিন্তু ইউজার সাইজ সিলেক্ট না করে থাকে
-            if (cart[i].sizes && cart[i].sizes.length > 0 && !cart[i].selectedSize) {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].sizes && items[i].sizes.length > 0 && !items[i].selectedSize) {
                 Swal.fire({
                     title: 'Size Required!',
-                    text: `দয়া করে "${cart[i].title}" প্রোডাক্টটির সাইজ সিলেক্ট করুন!`,
+                    text: `দয়া করে "${items[i].title}" প্রোডাক্টটির সাইজ সিলেক্ট করুন!`,
                     icon: 'warning',
                     confirmButtonColor: '#000000'
                 });
-                return; // এখানেই কোড এক্সিকিউশন স্টপ করে দেবে, রিকোয়েস্ট সার্ভারে যাবে না
+                return;
             }
         }
         
+        // 📦 ঠিকানা একত্রিত করা
+        const division = document.getElementById('division').value;
+        const district = document.getElementById('district').value;
+        const upazila = document.getElementById('upazila').value;
+        const detailedAddress = document.getElementById('detailed-address').value;
+
+        const fullAddress = `${detailedAddress}, Upazila: ${upazila}, District: ${district}, Division: ${division}`;
+
         const orderData = {
             name: document.getElementById('name').value,
             phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
-            items: cart, // আপডেটেড selectedSize সহ পুরো কার্ট অবজেক্ট ব্যাকএন্ডে সাবমিট হবে
+            address: fullAddress,
+            items: items,
             totalAmount: globalFinalTotal
         };
 
@@ -173,11 +392,13 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Order Placed Successfully!',
-                    text: 'আপনার অর্ডারটি সফল হয়েছে। আইডিটি পরবর্তী ট্র্যাকিং এর জন্য সেভ রাখুন।',
-                    confirmButtonText: 'View Order ID',
+                    text: 'আপনার অর্ডারটি সফল হয়েছে।',
+                    confirmButtonText: 'OK',
                     confirmButtonColor: '#000000'
                 }).then(() => {
                     localStorage.removeItem('cart');
+                    localStorage.removeItem('checkoutItem');
+                    localStorage.removeItem('isDirectCheckout');
                     window.dispatchEvent(new CustomEvent('cartUpdated'));
                     window.location.href = `/order-success/${result.customOrderId}`;
                 });
@@ -188,8 +409,6 @@
             Swal.fire('Error', 'সার্ভারে কানেক্ট করতে সমস্যা হচ্ছে, আবার চেষ্টা করুন!', 'error');
         }
     });
-
-    document.addEventListener('DOMContentLoaded', loadCheckout);
 </script>
 
 <%- include('partials/footer') %>

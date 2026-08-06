@@ -28,9 +28,9 @@
 
 <script>
     // =========================================================================
-    // ⚙️ CONFIGURATION ZONE: CHNAGE THIS VALUE TO CONTROL LOAD LIMITS
+    // ⚙️ CONFIGURATION ZONE
     // =========================================================================
-    const productsPerPage = 10; // 👈 Ekhane 10, 20, 25 ba jekono number bosailei auto sob control hobe
+    const productsPerPage = 10;
     // =========================================================================
 
     // Server handling data payload
@@ -48,11 +48,11 @@
     function createProductCardMarkup(product) {
         const hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
         const displayPrice = hasDiscount ? product.discountPrice : product.regularPrice;
-        const sanitizedTitle = product.title.replace(/'/g, "\\'");
 
-        return `
+      return `
             <div class="group relative opacity-0 translate-y-4 transition-all duration-500 ease-out product-card-fade">
-                <div class="relative aspect-[3/4] overflow-hidden bg-gray-50 rounded-2xl border border-gray-100">
+                <!-- স্মুথ ক্লিক ট্রানজিশনের জন্য পেজ নেভিগেশন ফাংশন যুক্ত করা হয়েছে -->
+                <div onclick="goToProduct('${product._id}')" class="relative aspect-[3/4] overflow-hidden bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer">
                     <img src="${product.imgUrl}" alt="${product.title}" 
                          class="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110">
                     
@@ -66,29 +66,17 @@
                             </span>
                         ` : ''}
                     </div>
-
-                    <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <div class="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-transform duration-500 delay-75">
-                            <a href="/product/${product._id}" class="w-11 h-11 bg-white hover:bg-red-600 hover:text-white text-gray-900 rounded-full flex items-center justify-center shadow-xl transition-all duration-300">
-                                <i class="fa-regular fa-eye"></i>
-                            </a>
-                            <button class="w-11 h-11 bg-white hover:bg-black hover:text-white text-gray-900 rounded-full flex items-center justify-center shadow-xl transition-all duration-300">
-                                <i class="fa-regular fa-heart"></i>
-                            </button>
-                        </div>
-
-                        <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                            <button onclick="addToCart('${product._id}', '${sanitizedTitle}', '${displayPrice}', '${product.imgUrl}')" 
-                                    class="w-full bg-gray-900 hover:bg-red-600 text-white py-4 rounded-xl text-xs font-bold uppercase tracking-widest shadow-2xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer">
-                                <i class="fa-solid fa-cart-plus"></i>
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
+                <!-- Add to Cart বাটন -->
+                <button onclick="addToCart('${product._id}')" 
+                        class="w-full relative top-3 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-cart-plus"></i>
+                    Add to Cart
+                </button>
+
                 <div class="mt-6 px-1">
-                    <h3 class="text-base font-bold text-gray-800 hover:text-red-600 transition-colors line-clamp-1 cursor-pointer">
+                    <h3 onclick="goToProduct('${product._id}')" class="text-base font-bold text-gray-800 hover:text-red-600 transition-colors line-clamp-1 cursor-pointer">
                         ${product.title}
                     </h3>
                     <div class="flex items-center justify-between mt-2">
@@ -115,25 +103,32 @@
         `;
     }
 
+    // স্মুথ ট্রানজিশনের মাধ্যমে পেজ পরিবর্তনের ফাংশন
+    function goToProduct(id) {
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                window.location.href = `/product/${id}`;
+            });
+        } else {
+            window.location.href = `/product/${id}`;
+        }
+    }
+
     // Intermediary controller to handle loading animation states
     function handleLoadMore() {
-        // Disable button and set Loading states
         loadMoreBtn.disabled = true;
         loadMoreBtn.classList.add('opacity-80', 'cursor-not-allowed');
         btnText.innerText = "Loading Products...";
         btnIcon.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-sm"></i>`;
 
-        // Wrap deployment logic inside a smooth 800ms transition delay simulator
         setTimeout(() => {
             loadNextBatch();
 
-            // Reset button default values after execution
             loadMoreBtn.disabled = false;
             loadMoreBtn.classList.remove('opacity-80', 'cursor-not-allowed');
             btnText.innerText = "Load More Products";
             btnIcon.innerHTML = `<i class="fa-solid fa-chevron-down text-[10px]"></i>`;
             
-            // Check structural layout bounds to drop element out if maximum scale index hit
             if (currentIndex >= allProducts.length) {
                 loadMoreContainer.classList.add('hidden');
             }
@@ -148,7 +143,6 @@
         productGrid.insertAdjacentHTML('beforeend', htmlMarkup);
         currentIndex += nextBatch.length;
 
-        // Microtask animation framework mapping cards sequence transitions
         setTimeout(() => {
             document.querySelectorAll('.product-card-fade').forEach(card => {
                 card.classList.remove('opacity-0', 'translate-y-4');
@@ -162,8 +156,47 @@
         }
     }
 
-    // Shopping Cart LocalStorage Handlers
-    function addToCart(id, title, regularPrice, img) {
+
+
+
+    function buyNow(id) {
+        // গ্লোবাল allProducts অ্যারে থেকে প্রোডাক্ট খুঁজে বের করা
+        const product = allProducts.find(p => p._id === id);
+        if (!product) return;        
+
+        // ডিসকাউন্ট প্রাইস চেক করা (যেহেতু এটি এই স্কোপে আগে ছিল না)
+        const hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
+        const displayPrice = hasDiscount ? product.discountPrice : product.regularPrice;
+
+        // সিঙ্গেল বাই নাউ এর জন্য আলাদা অবজেক্ট তৈরি করা হলো
+        const singleBuyItem = {
+            id: product._id, 
+            title: product.title, 
+            regularPrice: displayPrice, // এখন আর এরর দিবে না
+            img: product.imgUrl, 
+            category: product.category,
+            quantity: 1, 
+            sizes: product.sizes || [], 
+            selectedSize: '' 
+        };
+
+        // আলাদা মেমরিতে সেভ করা যাতে কার্ট থেকে আলাদা থাকে
+        localStorage.setItem('checkoutItem', JSON.stringify(singleBuyItem));
+        localStorage.setItem('isDirectCheckout', 'true'); // ফ্ল্যাগ সেট করা হলো যে এটি বাই নাউ থেকে এসেছে
+
+        // সরাসরি চেকআউট পেজে রিডাইরেক্ট
+        window.location.href = '/checkout';
+    }
+
+
+    // Shopping Cart LocalStorage Handlers (ID based lookup)
+    function addToCart(id) {
+        const product = allProducts.find(p => p._id === id);
+        if (!product) return;
+
+        const hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
+        const displayPrice = hasDiscount ? product.discountPrice : product.regularPrice;
+
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         const existingItem = cart.find(item => item.id === id);
 
@@ -174,21 +207,31 @@
                 text: `Product is already in cart, so updated quantity.`,
                 icon: 'info',
                 toast: true,
-                position: 'top-end',
+                position: window.innerWidth < 768 ? 'top-enter' : 'top-end',
                 showConfirmButton: false,
-                timer: 2500,
+                timer: 600,
                 timerProgressBar: true
             });
         } else {
-            cart.push({ id, title, regularPrice, img, quantity: 1 });
+            cart.push({ 
+                id: product._id, 
+                title: product.title, 
+                regularPrice: displayPrice, 
+                img: product.imgUrl, 
+                category: product.category,
+                quantity: 1, 
+                sizes: product.sizes || [], 
+                selectedSize: '' 
+            });
+
             Swal.fire({
                 title: 'Success!',
                 text: `Product has been added to your shopping cart.`,
                 icon: 'success',
                 toast: true,
-                position: 'top-end',
+                position: window.innerWidth < 768 ? 'top-center' : 'top-end',
                 showConfirmButton: false,
-                timer: 2500,
+                timer: 600,
                 timerProgressBar: true
             });
         }

@@ -10,7 +10,8 @@
             </h2>
             
             <!-- Standard Minimal Product Grid Components Layout -->
-            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 
+            lg:grid-cols-4 gap-1">
                 <!-- Products dynamically rendered via JavaScript loop inside nodes -->
             </div>
         </div>
@@ -42,14 +43,16 @@
             const sanitizedTitle = product.title.replace(/'/g, "\\'");
 
             productGrid.innerHTML += `
-                <div class="border border-gray-200 rounded-sm p-4 bg-white flex flex-col justify-between hover:shadow-sm transition-shadow">
+                <div class=" rounded-sm p-2 bg-white flex flex-col justify-between 
+                hover:shadow-sm transition-shadow">
                     
                     <!-- Product Image Wrapper Element -->
-                    <div class="relative overflow-hidden bg-gray-50 rounded-sm aspect-square mb-4">
+                    <div class="relative overflow-hidden bg-gray-50 rounded-sm h-54 mb-4">
                         ${saleBadgeMarkup}
                         <a href="/product/${product._id}" class="cursor-pointer hover:opacity-80">
                             
-                        <img src="${product.imgUrl}" alt="${product.title}" class="w-full h-full object-cover">
+                        <img src="${product.imgUrl}" alt="${product.title}" class="w-full h-full 
+                        object-cover">
                          </a> 
                         <!-- Fixed Static Classic View Details Button Overlay Panel Link -->
                        
@@ -112,9 +115,9 @@
                 text: `product has already in cart so updated quantity`,
                 icon: 'info',
                 toast: true,
-                position: 'top-end',
+                position: window.innerWidth < 768 ? 'top-center' : 'top-end',
                 showConfirmButton: false,
-                timer: 2500,
+                timer: 700,
                 timerProgressBar: true
             });
             } else {
@@ -124,9 +127,9 @@
                 text: `product has been added to your shopping cart.`,
                 icon: 'success',
                 toast: true,
-                position: 'top-end',
+                position: window.innerWidth < 768 ? 'top-center' : 'top-end',
                 showConfirmButton: false,
-                timer: 2500,
+                timer: 700,
                 timerProgressBar: true
             });
             }

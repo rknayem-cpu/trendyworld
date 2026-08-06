@@ -1,0 +1,73 @@
+<%- include('partials/headr') %>
+<div class="max-w-2xl mx-auto my-10 space-y-8">
+    
+    <!-- ফর্ম সেকশন -->
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+        <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">Add Banner URL</h2>
+        
+        <form action="/admin/add-banner" method="POST" class="space-y-6">
+            
+            <!-- Banner Image URL -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Banner Image URL</label>
+                <input type="url" name="bUrl" placeholder="https://example.com/banner.jpg" required
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <!-- Title -->
+           
+
+            <!-- Button Text -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Button Text (e.g., Shop Now)</label>
+                <input type="text" name="btnText" placeholder="Shop Now" 
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <!-- Button URL -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Button Link URL (e.g., /shop)</label>
+                <input type="text" name="btnUrl" placeholder="/shop" 
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <button type="submit" 
+                class="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg transition duration-300 uppercase tracking-wider text-sm cursor-pointer">
+                Save Banner
+            </button>
+        </form>
+    </div>
+
+  <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+    <h3 class="text-xl font-bold mb-6 text-center text-indigo-400">Current Banners</h3>
+    
+    <% if (banners && banners.length > 0) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <% banners.forEach(banner => { %>
+                <div class="relative group overflow-hidden rounded-xl border border-gray-700 bg-gray-900 p-3 space-y-3">
+                    <!-- ব্যানার ইমেজ -->
+                    <img src="<%= banner.bUrl %>" alt="Banner" class="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition duration-300">
+                    
+                    <!-- ব্যানার ইউআরএল -->
+                    <div class="text-[10px] text-gray-400 truncate"><%= banner.bUrl %></div>
+                    
+                    <!-- ডিলিট বাটন ফর্ম -->
+                    <form action="/admin/delete-banner/<%= banner._id %>" method="POST" onsubmit="return confirm('আপনি কি নিশ্চিত এই ব্যানারটি ডিলিট করতে চান?');">
+                        <button type="submit" 
+                            class="w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition duration-300 shadow-md cursor-pointer flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <p class="text-center text-gray-500">কোনো ব্যানার পাওয়া যায়নি!</p>
+    <% } %>
+</div>
+
+</div>
+<%- include('partials/footer') %>

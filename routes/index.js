@@ -3,21 +3,149 @@ var router = express.Router();
 const mongoose = require('mongoose')
 const connectDB = require('../lib/db')
 const Post = require('../models/post')
+const Banner = require('../models/banner')
 /* GET home page. */
+
+
+const isAdmin = (req, res, next) => {
+    // সেশনে যদি adminVerified ট্রু থাকে, তবেই পরের পেজে যাওয়ার অনুমতি পাবে
+    if (req.session && req.session.adminVerified) {
+        return next();
+    } else {
+        // ভেরিফাইড না হলে লগইন পেজে রিডাইরেক্ট করবে
+        res.redirect('/admin/login');
+        
+    }
+};
+
+
 router.get('/', async function (req, res, next) {
+    try {
+        connectDB();
 
-    connectDB();
+        // ১. ডাটাবেজ থেকে পোস্ট ফেচ করুন
+        const posts = await Post.find();
 
-    const posts = await Post.find();
+        // ২. ডাটাবেজ থেকে ব্যানার ফেচ করতে পারেন অথবা ডিফল্ট ব্যানার রাখতে পারেন
+        // (এখানে ধরে নিচ্ছি আপনার ব্যানার আলাদা কালেকশনে আছে, না থাকলে ডিফল্ট ব্যানার দেখাবে)
+        const dbBanners = await Banner.find({}); // এখানে আপনার ব্যানার কুয়েরি বসাতে পারেন, যেমন: await Banner.find();
+        
+        const defaultBanners = [
+            {
+                tag: "Season 2026",
+                tagColor: "royal-red",
+                title: "The Modern<br>Standard.",
+                btnText: "Shop Now",
+                btnUrl: "/shop",
+                btnBg: "bg-royal-red text-white",
+                bgClass: "bg-banner-1"
+            },
+            {
+                tag: "Just Landed",
+                tagColor: "text-blue-400",
+                title: "New<br>Arrivals",
+                btnText: "View Collection",
+                btnUrl: "/new-arrivals",
+                btnBg: "bg-white text-black",
+                bgClass: "bg-banner-2"
+            },
+            {
+                tag: "Eid collection Limited Time",
+                tagColor: "text-yellow-400",
+                title: "Flash<br>Sale",
+                btnText: "Grab Deals",
+                btnUrl: "/grab-deals",
+                btnBg: "bg-yellow-500 text-black",
+                bgClass: "bg-banner-3"
+            },
+            {
+                tag: "Big Savings",
+                tagColor: "text-green-400",
+                title: "UPTO 50%<br>DISCOUNT",
+                btnText: "Shop Sale",
+                btnUrl: "/discounts",
+                btnBg: "bg-royal-red text-white",
+                bgClass: "bg-banner-4"
+            },
+            {
+                tag: "Exclusive Offer",
+                tagColor: "text-teal-300",
+                title: "FREE DELIVERY<br>SHOP OVER ৳3500",
+                btnText: "Buy Now",
+                btnUrl: "/shop",
+                btnBg: "bg-white text-teal-900",
+                bgClass: "bg-banner-5"
+            }
+        ];
 
-    res.render('index', { posts });
+        // ব্যানার চেক: ডাটাবেজে ব্যানার থাকলে তা নেবে, না থাকলে ডিফল্ট ব্যানার দেখাবে
+        const banners = (dbBanners && dbBanners.length > 0) ? dbBanners : defaultBanners;
+
+        // একসাথে posts এবং banners উভয়ই রেন্ডারে পাঠিয়ে দিলাম
+        res.render('index', { posts, banners });
+
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
 });
-
 
 router.get('/more', function (req, res, next) {
 
     res.render('more');
 });
+
+
+
+
+
+
+
+
+
+router.get('/admin/banner',isAdmin,async function (req, res, next) {
+const banners = await Banner.find({})
+    res.render('banner',{banners});
+});
+
+
+router.post('/admin/add-banner', async (req, res) => {
+    try {
+        const { bUrl,btnText, btnUrl } = req.body;
+
+        if (!bUrl) {
+            return res.status(400).send('দয়া করে একটি ব্যানার ইমেজ ইউআরএল দিন!');
+        }
+
+        // নতুন ব্যানার সেভ করা (Banner.create নিজেই সেভ করে দেয়, তাই আলাদা করে .save() লেখার দরকার নেই)
+        await Banner.create({ 
+            bUrl, 
+            btnText, 
+            btnUrl 
+        });
+
+        res.redirect('/'); // সফলভাবে সেভ হলে হোমপেজে রিডাইরেক্ট করবে
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('সার্ভারে সমস্যা হয়েছে!');
+    } 
+});
+
+router.post('/admin/delete-banner/:id', async (req, res) => {
+    try {
+        const bannerId = req.params.id;
+
+        // ডাটাবেজ থেকে আইডি দিয়ে ব্যানার ডিলিট করা
+        await Banner.findByIdAndDelete(bannerId);
+
+        // সফলভাবে ডিলিট হওয়ার পর একই পেজে রিডাইরেক্ট করবে
+        res.redirect('back'); 
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('ব্যানার ডিলিট করতে সমস্যা হয়েছে!');
+    }
+});
+
 
 
 
@@ -111,15 +239,7 @@ router.get('/cart', (req, res) => {
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-const isAdmin = (req, res, next) => {
-    // সেশনে যদি adminVerified ট্রু থাকে, তবেই পরের পেজে যাওয়ার অনুমতি পাবে
-    if (req.session && req.session.adminVerified) {
-        return next();
-    } else {
-        // ভেরিফাইড না হলে লগইন পেজে রিডাইরেক্ট করবে
-        res.redirect('/admin/login');
-    }
-};
+
 router.get('/add',isAdmin, function (req, res, next) {
 
     res.render('add');
