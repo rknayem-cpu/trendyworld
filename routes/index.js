@@ -5,6 +5,84 @@ const connectDB = require('../lib/db')
 const Post = require('../models/post')
 const Banner = require('../models/banner')
 /* GET home page. */
+const webpush = require('web-push');
+const Subscription = require('../models/Subscription');
+
+// VAPID সেটআপ
+webpush.setVapidDetails(
+  "mailto:trendyworldcollection.bd@gmail.com",
+ "BJCvEUtUNgqgSCGsCHbY5VDhVNmvj6zPDg5ekEO7uEVu9AXHapzXsA20wHuO85mh3FxGCLjdJUueQ58-oSTj0sk",
+  "qDMx6hVJ0t4NYR0SnTK5aUWvwv0zjGOHi5_lXANO_cI"
+);
+
+// ১. Frontend-কে Public Key দেওয়ার API
+router.get('/vapid-public-key', (req, res) => {
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// ২. ডিভাইসের Subscription সেভ করার API
+router.post('/subscribe', async (req, res) => {
+  const subscription = req.body;
+  try {
+    let existingSub = await Subscription.findOne({ endpoint: subscription.endpoint });
+    if (!existingSub) {
+      await Subscription.create(subscription);
+    }
+    res.status(201).json({ message: 'Device token saved successfully!' });
+  } catch (error) {
+    console.error('Subscription save error:', error);
+    res.status(500).json({ error: 'Failed to save subscription' });
+  }
+});
+
+// ৩. এডমিন প্যানেল বা যেকোনো জায়গা থেকে নোটিফিকেশন পাঠানোর API
+router.post('/send-notification', async (req, res) => {
+  const { title, body } = req.body;
+
+  const payload = JSON.stringify({
+    title: title || 'নতুন আপডেট! 📢',
+    body: body || 'আমাদের ওয়েবসাইটে নতুন তথ্য যোগ করা হয়েছে।',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-72.png',
+    url: '/'
+  });
+
+  // 🔴 অ্যান্ড্রয়েডের জন্য এই অপশনগুলো জাদুকরী ভূমিকা রাখে 🔴
+  const options = {
+    TTL: 0, // Zero TTL: অর্থাৎ তাৎক্ষণিক পাঠাও, দেরি হলে ডিসকার্ড করো
+    headers: {
+      'Urgency': 'high', // Google FCM-কে ফোন Wake Up করানোর জন্য নির্দেশ দেয়
+      'Topic': 'instant-alerts' // একই টাইপ নোটিফিকেশন হিসেবে কিউ (Queue) হ্যান্ডেল করে
+    }
+  };
+
+  try {
+    const subscriptions = await Subscription.find();
+
+    const notifications = subscriptions.map((sub) => {
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: sub.keys
+      };
+
+      // ⚠️ এখানে ৩ নম্বর প্যারামিটার হিসেবে options বাধ্যতামূলক পাঠাবেন
+      return webpush.sendNotification(pushSubscription, payload, options)
+        .catch(async (err) => {
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            await Subscription.deleteOne({ endpoint: sub.endpoint });
+          }
+        });
+    });
+
+    await Promise.all(notifications);
+    res.status(200).json({ message: 'Notifications sent successfully!' });
+  } catch (error) {
+    console.error('Push error:', error);
+    res.status(500).json({ error: 'Failed to send notifications' });
+  }
+});
+
+
 
 
 const isAdmin = (req, res, next) => {
@@ -303,7 +381,35 @@ let sizeArray = [];
 
         // Database-e save kora
         await Post.create(postData);
+const notificationPayload = JSON.stringify({
+      title: `নতুন পণ্য যুক্ত করা হয়েছে! 🔥`,
+      body: `${title} - মাত্র ৳${isDiscount && discountPrice ? discountPrice : regularPrice}-এ!`,
+      icon: imgUrl || '/icons/icon-192.png',
+      url: `/product/${newProduct._id}` // নতুন প্রডাক্টের পেজ লিংক
+    });
 
+    const options = {
+      TTL: 86400, // ২৪ ঘণ্টা
+      headers: {
+        'Urgency': 'high' // ইনস্ট্যান্ট অ্যান্ড্রয়েড ডেলিভারি
+      }
+    };
+
+    // সব সাবস্ক্রাইবড ডিভাইসে মেসেজ পাঠানো
+    const subscriptions = await Subscription.find();
+    
+    // ব্যাকগ্রাউন্ডে নোটিফিকেশন সেন্ড হতে থাকবে (Async Non-blocking)
+    Promise.all(
+      subscriptions.map((sub) => {
+        const pushSub = { endpoint: sub.endpoint, keys: sub.keys };
+        return webpush.sendNotification(pushSub, notificationPayload, options)
+          .catch(async (err) => {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+              await Subscription.deleteOne({ endpoint: sub.endpoint });
+            }
+          });
+      })
+    ).catch(err => console.error('Notification dispatch error:', err));
         res.send('success');
     } catch (error) {
         console.error("Error creating post:", error);

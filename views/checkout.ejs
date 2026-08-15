@@ -38,7 +38,7 @@
                     </div>
 
                     <div>
-                        <input type="text" id="detailed-address" required placeholder="বাসা/হোল্ডিং নম্বর, রোড, এলাকা (যেমন: মিরপুর ১০)" class="w-full mt-1 px-4 py-3 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-black">
+                        <input type="text" id="detailed-address" required placeholder="বাসা/হোল্ডিং নম্বর, রোড, এলাকা (যেমন: গোয়ালচামট, ফরিদপুর)" class="w-full mt-1 px-4 py-3 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-black">
                     </div>
                 </div>
 
@@ -75,7 +75,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // 📍 বাংলাদেশের বিভাগ, জেলা ও উপজেলার ডাটাবেজ
     const bdLocations = {
         "Dhaka": {
             "Dhaka": ["Gulshan", "Banani", "Dhanmondi", "Mirpur", "Uttara", "Mohakhali", "Tejgaon", "Motijheel", "Savar", "Keraniganj", "Nawabganj", "Dohar"],
@@ -160,6 +159,18 @@
 
     let globalFinalTotal = 0;
 
+    function getShippingFee() {
+        const districtSelect = document.getElementById("district");
+        const selectedDistrict = districtSelect ? districtSelect.value : "";
+        
+        // ডিস্ট্রিক্ট যদি 'Faridpur' হয় তবে ৳60, অন্যথায় বা সিলেক্ট না করলে ৳120
+        if (selectedDistrict === "Faridpur") {
+            return 60;
+        } else {
+            return 120;
+        }
+    }
+
     function loadCheckout() {
         const isDirect = localStorage.getItem('isDirectCheckout') === 'true';
         let items = [];
@@ -229,11 +240,11 @@
             `;
         }).join('');
         
-        let shippingFee = subtotal >= 3500 ? 0 : 80;
+        let shippingFee = getShippingFee();
         globalFinalTotal = subtotal + shippingFee;
 
         subtotalEl.innerText = '৳' + subtotal.toFixed(2);
-        shippingEl.innerText = shippingFee === 0 ? 'Free' : '৳' + shippingFee.toFixed(2);
+        shippingEl.innerText = '৳' + shippingFee.toFixed(2);
         totalEl.innerText = '৳' + globalFinalTotal.toFixed(2);
     }
 
@@ -270,7 +281,7 @@
         }
     }
 
-    // 🔄 ড্রপডাউন হ্যান্ডেল করার লজিক
+    // 🔄 ড্রপডাউন হ্যান্ডেল করার লজিক (A to Z Sorting সহ)
     document.addEventListener("DOMContentLoaded", () => {
         loadCheckout();
 
@@ -278,13 +289,16 @@
         const districtSelect = document.getElementById("district");
         const upazilaSelect = document.getElementById("upazila");
 
-        for (let division in bdLocations) {
+        // ১. বিভাগগুলো A-Z অ্যালফাবেটিকালি সাজানো
+        const sortedDivisions = Object.keys(bdLocations).sort();
+        sortedDivisions.forEach(division => {
             let option = document.createElement("option");
             option.value = division;
             option.textContent = division;
             divisionSelect.appendChild(option);
-        }
+        });
 
+        // বিভাগ পরিবর্তন হলে
         divisionSelect.addEventListener("change", function () {
             const selectedDivision = this.value;
             districtSelect.innerHTML = '<option value="">-- জেলা নির্বাচন --</option>';
@@ -293,18 +307,24 @@
 
             if (selectedDivision && bdLocations[selectedDivision]) {
                 districtSelect.disabled = false;
-                const districts = bdLocations[selectedDivision];
-                for (let district in districts) {
+                
+                // ২. জেলাগুলো A-Z অ্যালফাবেটিকালি সাজানো
+                const sortedDistricts = Object.keys(bdLocations[selectedDivision]).sort();
+                sortedDistricts.forEach(district => {
                     let option = document.createElement("option");
                     option.value = district;
                     option.textContent = district;
                     districtSelect.appendChild(option);
-                }
+                });
             } else {
                 districtSelect.disabled = true;
             }
+            
+            // বিভাগ পরিবর্তন হলে শিপিং রি-ক্যালকুলেট করা
+            loadCheckout();
         });
 
+        // জেলা পরিবর্তন হলে
         districtSelect.addEventListener("change", function () {
             const selectedDivision = divisionSelect.value;
             const selectedDistrict = this.value;
@@ -312,15 +332,17 @@
 
             if (selectedDistrict && bdLocations[selectedDivision][selectedDistrict]) {
                 upazilaSelect.disabled = false;
-                const upazilas = bdLocations[selectedDivision][selectedDistrict];
                 
-                if(upazilas.length === 0) {
+                // ৩. উপজেলাগুলো A-Z অ্যালফাবেটিকালি সাজানো
+                const sortedUpazilas = [...bdLocations[selectedDivision][selectedDistrict]].sort();
+                
+                if(sortedUpazilas.length === 0) {
                     let option = document.createElement("option");
                     option.value = "Sadar";
                     option.textContent = "Sadar";
                     upazilaSelect.appendChild(option);
                 } else {
-                    upazilas.forEach(upazila => {
+                    sortedUpazilas.forEach(upazila => {
                         let option = document.createElement("option");
                         option.value = upazila;
                         option.textContent = upazila;
@@ -330,6 +352,9 @@
             } else {
                 upazilaSelect.disabled = true;
             }
+
+            // জেলা ফরিদপুর কিনা তা চেক করে শিপিং চার্জ ও টোটাল আপডেট
+            loadCheckout();
         });
     });
 

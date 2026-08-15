@@ -16,6 +16,7 @@
     "mongoose": "^9.6.2",
     "morgan": "~1.9.1",
     "nodemon": "^3.1.14",
-    "serve-favicon": "^2.5.1"
+    "serve-favicon": "^2.5.1",
+    "web-push": "^3.6.7"
   }
 }

@@ -24,12 +24,8 @@
                         <span>Subtotal</span>
                         <span id="subtotal">৳0</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Shipping</span>
-                        <span id="shipping-fee" class="font-medium">৳0</span>
-                    </div>
-                    
-                    <div id="shipping-alert" class="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 hidden"></div>
+
+                    <p class="text-xs text-gray-400 italic mt-2">* Shipping fee will be calculated at checkout</p>
                     
                     <div class="border-t pt-4 mt-4 flex justify-between text-2xl font-black text-red-600">
                         <span>Total</span>
@@ -51,17 +47,12 @@
         const wrapper = document.getElementById('cart-wrapper');
         const emptyUI = document.getElementById('empty-cart-ui');
         const subtotalEl = document.getElementById('subtotal');
-        const shippingEl = document.getElementById('shipping-fee');
-        const shippingAlert = document.getElementById('shipping-alert');
         const totalEl = document.getElementById('final-total');
 
         if (cart.length === 0) {
             wrapper.innerHTML = '';
             emptyUI.classList.remove('hidden');
             subtotalEl.innerText = '৳0.00';
-            shippingEl.innerText = '৳0.00';
-            shippingEl.className = "text-gray-600 font-medium";
-            shippingAlert.classList.add('hidden');
             totalEl.innerText = '৳0.00';
             return;
         }
@@ -71,7 +62,6 @@
         let subtotalPrice = 0;
 
         cart.forEach((item, index) => {
-            // FIXED: item.price soriye item.regularPrice read kora hocche safe fallback shoho
             const rawPrice = item.regularPrice ? item.regularPrice.toString() : "0";
             const itemPrice = parseFloat(rawPrice.replace(/[^0-9.-]+/g, "")) || 0;
             const itemTotal = itemPrice * item.quantity;
@@ -105,28 +95,9 @@
 
         wrapper.innerHTML = cartHTML;
 
-        // SHIPPING LOGIC (৳3500 ba tar beshi hole shipping fee auto free)
-        let shippingFee = 80; // Default shipping fee ৳80
-        if (subtotalPrice >= 3500) {
-            shippingFee = 0;
-            shippingEl.innerText = 'Free';
-            shippingEl.className = "text-green-600 font-bold uppercase";
-            shippingAlert.classList.add('hidden');
-        } else {
-            shippingEl.innerText = '৳' + shippingFee.toFixed(2);
-            shippingEl.className = "text-gray-800 font-medium";
-            
-            // User ke intelligent notification dekhano
-            const shortAmount = 3500 - subtotalPrice;
-            shippingAlert.innerText = `Add ৳${shortAmount.toFixed(2)} more to get FREE Shipping!`;
-            shippingAlert.classList.remove('hidden');
-        }
-
-        // Final Total Calculation (Subtotal + Shipping Fee)
-        const finalTotal = subtotalPrice + shippingFee;
-
+        // Subtotal and Total display (Without Shipping Fee)
         subtotalEl.innerText = '৳' + subtotalPrice.toFixed(2);
-        totalEl.innerText = '৳' + finalTotal.toFixed(2);
+        totalEl.innerText = '৳' + subtotalPrice.toFixed(2);
     }
 
     // Quantity বাড়ানো বা কমানো
@@ -152,9 +123,8 @@
     }
 
     function checkIt(){
-       
         localStorage.setItem('isDirectCheckout', 'false');
-        window.location.href='/checkout'
+        window.location.href='/checkout';
     }
 
     // পেজ লোড হলে রান হবে
