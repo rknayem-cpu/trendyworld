@@ -1,0 +1,32 @@
+<!-- ভিজিটর কাউন্টার কার্ড -->
+<div class="flex items-center justify-center my-6">
+    <div class="bg-white px-6 py-4 rounded-3xl shadow-sm border border-gray-100 flex items-center space-x-4">
+        <div class="w-12 h-12 bg-red-50 text-royal-red rounded-2xl flex items-center justify-center text-lg shadow-sm">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div>
+            <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">আজকের মোট ভিজিটর</p>
+            <h4 id="visitorCount" class="text-xl font-black text-gray-800">লোড হচ্ছে...</h4>
+        </div>
+    </div>
+</div>
+
+<script>
+    // পেজ লোড হওয়ার সাথে সাথে ব্যাকএন্ডের API থেকে ভিজিটর সংখ্যা নিয়ে এসে আপডেট করবে
+    async function fetchTodayVisitors() {
+        try {
+            const response = await fetch('/stats/today-visitors');
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('visitorCount').innerText = data.todayVisitors + ' জন';
+            } else {
+                document.getElementById('visitorCount').innerText = '০ জন';
+            }
+        } catch (error) {
+            console.error('Visitor fetch error:', error);
+            document.getElementById('visitorCount').innerText = 'তথ্য পাওয়া যায়নি';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchTodayVisitors);
+</script>

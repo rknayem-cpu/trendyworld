@@ -7,7 +7,39 @@ const session = require('express-session');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const favicon = require('serve-favicon');
+const Visitor = require('./models/Visitor'); // আপনার ভিজিটর মডেল পাথ ঠিক করে দেবেন
+
 var app = express();
+
+
+
+
+
+// গ্লোবাল ভিজিটর ট্র্যাকিং মিডলওয়্যার
+app.use(async (req, res, next) => {
+  // স্ট্যাটিক ফাইল (যেমন: css, js, images, favicon) বা API কল বাদ দিয়ে শুধু পেজ ভিজিট ট্র্যাক করার জন্য
+  if (req.path.startsWith('/stylesheets') || req.path.startsWith('/javascripts') || req.path.startsWith('/images') || req.path.startsWith('/stats')) {
+    return next();
+  }
+
+  try {
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const today = new Date().toISOString().split('T')[0];
+
+    // ডাটাবেজে সেভ (এক দিনে একই আইপি একবারই কাউন্ট হবে)
+    await Visitor.updateOne(
+      { ip: clientIp, date: today },
+      { $setOnInsert: { ip: clientIp, date: today } },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error('Middleware visitor tracking error:', error);
+  }
+
+  next(); // পরবর্তী রাউটে যেতে দিন
+});
+
+
 
 
 

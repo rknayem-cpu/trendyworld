@@ -53,8 +53,16 @@
           }
         });
 
-        const notifyBtn = document.getElementById('manualNotifyBtn');
-        if (notifyBtn) notifyBtn.style.display = 'none';
+        const notifyCard = document.getElementById('notificationPromptCard');
+        if (notifyCard) notifyCard.style.display = 'none';
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'ধন্যবাদ!',
+            text: 'আপনি সফলভাবে নোটিফিকেশন সাবস্ক্রাইব করেছেন।',
+            timer: 2000,
+            showConfirmButton: false
+        });
       }
     } catch (error) {
       console.error('Push Subscription Setup Error:', error);
@@ -62,7 +70,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    initWebPushSubscription();
+    // যদি অলরেডি পারমিশন দেওয়া থাকে, অটো সাবস্ক্রাইব রান করবে
+    if (Notification.permission === 'granted') {
+        initWebPushSubscription();
+    }
 
     const manualBtn = document.getElementById('manualNotifyBtn');
     if (manualBtn) {
@@ -80,7 +91,6 @@
         .bg-royal-red { background-color: #D2042D; }
         
         #cart-sidebar, #checkout-modal { transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
-        /* Mobile Menu Animation Smoothness */
         #mobile-menu { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         
         .product-card:hover .quick-add { transform: translateY(0); opacity: 1; }
@@ -127,6 +137,9 @@
         </div>
     </header>
 
+  
+
+    <!-- Mobile Menu -->
     <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/40 z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
     <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[280px] bg-white z-[60] shadow-2xl transform translate-x-full flex flex-col justify-between border-l border-gray-100">
@@ -181,7 +194,7 @@
                 mobileMenuOverlay.classList.add('opacity-100');
                 mobileMenu.classList.remove('translate-x-full');
             }, 10);
-            document.body.style.overflow = 'hidden'; // Prevents background scroll when open
+            document.body.style.overflow = 'hidden';
         }
 
         function closeMenu() {

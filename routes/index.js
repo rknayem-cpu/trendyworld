@@ -1,86 +1,64 @@
 var express = require('express');
 var router = express.Router();
-const mongoose = require('mongoose')
 const connectDB = require('../lib/db')
 const Post = require('../models/post')
 const Banner = require('../models/banner')
 /* GET home page. */
-const webpush = require('web-push');
 const Subscription = require('../models/Subscription');
-
-// VAPID সেটআপ
-webpush.setVapidDetails(
-  "mailto:trendyworldcollection.bd@gmail.com",
- "BJCvEUtUNgqgSCGsCHbY5VDhVNmvj6zPDg5ekEO7uEVu9AXHapzXsA20wHuO85mh3FxGCLjdJUueQ58-oSTj0sk",
-  "qDMx6hVJ0t4NYR0SnTK5aUWvwv0zjGOHi5_lXANO_cI"
-);
-
-// ১. Frontend-কে Public Key দেওয়ার API
-router.get('/vapid-public-key', (req, res) => {
-  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
-});
-
-// ২. ডিভাইসের Subscription সেভ করার API
-router.post('/subscribe', async (req, res) => {
-  const subscription = req.body;
+const { sendFirebaseNotification } = require('../services/firebaseService');
+const Visitor = require('../models/Visitor');
+// ১. ব্রাউজার থেকে টোকেন পাওয়ার সাথে সাথেই MongoDB-তে সেভ করার রুট
+router.post('/save-token', async function(req, res) {
   try {
-    let existingSub = await Subscription.findOne({ endpoint: subscription.endpoint });
-    if (!existingSub) {
-      await Subscription.create(subscription);
+    const { token, endpoint, keys, expirationTime } = req.body;
+    
+    // ফায়ারবেসের টোকেন অথবা ওয়েব পুশ যাই আসুক সেটি হ্যান্ডেল করার জন্য
+    const targetToken = token || endpoint; 
+
+    if (!targetToken) {
+      return res.status(400).json({ success: false, message: 'Token is missing!' });
     }
-    res.status(201).json({ message: 'Device token saved successfully!' });
+
+    // `upsert: true` ব্যবহারের ফলে টোকেন আগে থেকে থাকলে আপডেট হবে, না থাকলে নতুন সেভ হবে (ডুপ্লিকেট হবে না)
+    await Subscription.findOneAndUpdate(
+      { endpoint: targetToken },
+      { 
+        endpoint: targetToken,
+        keys: keys || {},
+        expirationTime: expirationTime || null
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log('Token successfully saved to MongoDB!');
+    res.json({ success: true, message: 'Token saved successfully in Database!' });
   } catch (error) {
-    console.error('Subscription save error:', error);
-    res.status(500).json({ error: 'Failed to save subscription' });
+    console.error('Error saving token to DB:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// ৩. এডমিন প্যানেল বা যেকোনো জায়গা থেকে নোটিফিকেশন পাঠানোর API
-router.post('/send-notification', async (req, res) => {
-  const { title, body } = req.body;
-
-  const payload = JSON.stringify({
-    title: title || 'নতুন আপডেট! 📢',
-    body: body || 'আমাদের ওয়েবসাইটে নতুন তথ্য যোগ করা হয়েছে।',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
-    url: '/'
-  });
-
-  // 🔴 অ্যান্ড্রয়েডের জন্য এই অপশনগুলো জাদুকরী ভূমিকা রাখে 🔴
-  const options = {
-    TTL: 0, // Zero TTL: অর্থাৎ তাৎক্ষণিক পাঠাও, দেরি হলে ডিসকার্ড করো
-    headers: {
-      'Urgency': 'high', // Google FCM-কে ফোন Wake Up করানোর জন্য নির্দেশ দেয়
-      'Topic': 'instant-alerts' // একই টাইপ নোটিফিকেশন হিসেবে কিউ (Queue) হ্যান্ডেল করে
-    }
-  };
-
+// ২. ডাটাবেজ থেকে টোকেন নিয়ে নোটিফিকেশন পাঠানোর রুট
+router.post('/send-notification', async function(req, res) {
   try {
-    const subscriptions = await Subscription.find();
+    const { title, body } = req.body;
+    const response = await sendFirebaseNotification(title, body);
 
-    const notifications = subscriptions.map((sub) => {
-      const pushSubscription = {
-        endpoint: sub.endpoint,
-        keys: sub.keys
-      };
-
-      // ⚠️ এখানে ৩ নম্বর প্যারামিটার হিসেবে options বাধ্যতামূলক পাঠাবেন
-      return webpush.sendNotification(pushSubscription, payload, options)
-        .catch(async (err) => {
-          if (err.statusCode === 404 || err.statusCode === 410) {
-            await Subscription.deleteOne({ endpoint: sub.endpoint });
-          }
-        });
+    console.log(`Successfully sent: ${response.successCount}, Failed: ${response.failureCount}`);
+    res.json({ 
+      success: true, 
+      successCount: response.successCount, 
+      failureCount: response.failureCount 
     });
-
-    await Promise.all(notifications);
-    res.status(200).json({ message: 'Notifications sent successfully!' });
   } catch (error) {
-    console.error('Push error:', error);
-    res.status(500).json({ error: 'Failed to send notifications' });
+    console.error('Notification Send Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
+
+
+
+
 
 
 
@@ -95,6 +73,24 @@ const isAdmin = (req, res, next) => {
         
     }
 };
+
+
+
+
+
+router.get('/stats/today-visitors', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const count = await Visitor.countDocuments({ date: today });
+    res.json({ success: true, todayVisitors: count });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch visitors' });
+  }
+});
+
+
+
+
 
 
 router.get('/', async function (req, res, next) {
