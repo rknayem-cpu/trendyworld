@@ -1,209 +1,213 @@
 <%- include('../partials/headr') %>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="min-h-screen bg-slate-50 py-12">
-    <div class="container mx-auto px-4 max-w-5xl">
+<div class="min-h-screen bg-slate-50 py-10 px-4 sm:px-6">
+    <div class="container mx-auto max-w-6xl">
         
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Orders Management</h1>
-                <p class="text-slate-500 font-medium text-sm md:text-base">Monitor and process your customer orders lifecycle</p>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Orders Management</h1>
+                <p class="text-slate-500 text-xs sm:text-sm font-medium">Manage and process customer orders efficiently</p>
             </div>
-            <div class="bg-white px-5 py-2.5 rounded-full shadow-sm border font-bold text-slate-700 w-fit self-start sm:self-center">
+            <div class="bg-white px-4 py-2 rounded-2xl shadow-sm border font-bold text-slate-700 text-xs sm:text-sm w-fit">
                 Total Orders: <span class="text-indigo-600"><%= orders.length %></span>
             </div>
         </div>
 
-        <!-- Orders Wrapper -->
-        <div class="overflow-y-auto pr-1 md:pr-2 custom-scrollbar" style="max-height: 800px;">
-            <div class="grid grid-cols-1 gap-6">
-                <% if(orders.length > 0) { %>
-                    <% orders.reverse().forEach(order => { %>
-                        <div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100 flex flex-col lg:flex-row items-stretch justify-between gap-6 hover:shadow-md transition duration-300">
-                            
-                            <!-- 👤 Customer & Order Meta Info -->
-                            <div class="flex-1 w-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                                        <span class="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 px-3 py-1 rounded-full border border-slate-200">
-                                            <i class="fa-regular fa-calendar mr-1"></i> <%= order.createdAt.toLocaleDateString() %>
-                                        </span>
-                                        
-                                        <% 
-                                            let currentStatus = order.status || 'Pending';
-                                            let statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
-                                            if(currentStatus === 'Confirmed') statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                            if(currentStatus === 'Shipped') statusClass = 'bg-blue-50 text-blue-700 border-blue-200';
-                                            if(currentStatus === 'Delivered') statusClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                                        %>
-                                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 border rounded-full <%= statusClass %>">
+        <!-- Orders Table / List Container -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100 text-[11px] font-black uppercase text-slate-400 tracking-wider">
+                            <th class="py-4 px-4 sm:px-6">Order ID / Date</th>
+                            <th class="py-4 px-4">Customer Info</th>
+                            <th class="py-4 px-4">Amount</th>
+                            <th class="py-4 px-4">Status</th>
+                            <th class="py-4 px-4 text-center">Actions</th>
+                            <th class="py-4 px-6 text-right">View</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <% if(orders.length > 0) { %>
+                            <% orders.reverse().forEach(order => { %>
+                                <% 
+                                    let currentStatus = order.status || 'Pending';
+                                    let statusClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                    if(currentStatus === 'Confirmed') statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                    if(currentStatus === 'Shipped') statusClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                    if(currentStatus === 'Delivered') statusClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                                %>
+                                <tr class="hover:bg-slate-50/80 transition duration-150">
+                                    <!-- Order ID & Date -->
+                                    <td class="py-4 px-4 sm:px-6">
+                                        <div class="font-mono font-bold text-slate-800 text-xs">#<%= order.OrderId || order._id.toString().slice(-6) %></div>
+                                        <div class="text-[11px] text-slate-400 font-medium mt-0.5"><%= order.createdAt.toLocaleDateString() %></div>
+                                    </td>
+
+                                    <!-- Customer Info -->
+                                    <td class="py-4 px-4">
+                                        <div class="font-bold text-slate-800"><%= order.customerInfo.name %></div>
+                                        <div class="text-xs text-slate-500"><%= order.customerInfo.phone %></div>
+                                    </td>
+
+                                    <!-- Total Amount -->
+                                    <td class="py-4 px-4 font-black text-rose-600">
+                                        ৳<%= order.totalAmount %>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td class="py-4 px-4">
+                                        <span class="inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 border rounded-full <%= statusClass %>">
                                             ● <%= currentStatus %>
                                         </span>
-                                      
-                                        <% if(order.OrderId) { %>
-                                            <span class="text-[10px] font-mono font-bold bg-slate-900 text-white px-2.5 py-1 rounded-md">
-                                                #<%= order.OrderId %>
-                                            </span>
-                                        <% } %>
-                                    </div>
-                                    
-                                    <h3 class="text-xl font-bold text-slate-800 mb-2"><%= order.customerInfo.name %></h3>
-                                    
-                                    <div class="space-y-1.5">
-                                        <p class="text-slate-600 text-sm font-semibold flex items-center gap-2">
-                                            <span class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500"><i class="fa-solid fa-phone"></i></span>
-                                            <%= order.customerInfo.phone %>
-                                        </p>
-                                        <p class="text-slate-500 text-xs font-medium italic flex items-start gap-2">
-                                            <span class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 mt-0.5 flex-shrink-0"><i class="fa-solid fa-location-dot"></i></span>
-                                            <span class="leading-relaxed"><%= order.customerInfo.address %></span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                                    </td>
 
-                            <!-- 📦 Product Items List with Images -->
-                            <div class="flex-[1.5] w-full bg-slate-50/70 p-4 md:p-5 rounded-2xl border border-slate-100 flex flex-col justify-between">
-                                <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
-                                        <span>Ordered Items</span>
-                                        <span>Qty & Price</span>
-                                    </p>
-                                    
-                                    <div class="divide-y divide-slate-200/60 space-y-3">
-                                        <% order.items.forEach((item, index) => { %>
-                                            <div class="flex items-center justify-between gap-3 <%= index > 0 ? 'pt-3' : '' %>">
-                                                <div class="flex items-center gap-3">
-                                                    <!-- 📸 Product Image (with dynamic fallback if item.image or item.images[0] exists) -->
-                                                    <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 overflow-hidden flex-shrink-0 shadow-sm">
-                                                        <img src="<%= item.img %>" 
-                                                        onclick="window.location.href='/product/<%= item.productId %>'"
-                                                             alt="<%= item.title %>" 
-                                                             class="w-full h-full cursor-pointer"
-                                                             onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Product'">
-                                                    </div>
-                                                    
-                                                    <!-- Product Info Details -->
-                                                    <div class="flex flex-col">
-                                                        <span class="font-bold text-slate-800 text-sm line-clamp-1 leading-tight">
-                                                            <%= item.title %>
-                                                        </span>
-                                                        
-                                                        <!-- Size Badge (Rendered cleanly only if it exists) -->
-                                                        <% if (item.size) { %>
-                                                            <span class="inline-block w-fit mt-1 text-[9px] font-extrabold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wider">
-                                                                Size: <%= item.size %>
-                                                            </span>
-                                                        <% } %>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Pricing & Quantity Meta -->
-                                                <div class="text-right flex-shrink-0">
-                                                    <span class="text-xs font-bold text-slate-400 block">x<%= item.quantity %></span>
-                                                    <span class="text-sm font-bold text-slate-700">৳<%= item.regularPrice || item.price %></span>
-                                                </div>
-                                            </div>
-                                        <% }) %>
-                                    </div>
-                                </div>
-                                
-                                <!-- Calculations / Total Section -->
-                                <div class="mt-4 pt-3 border-t-2 border-dashed border-slate-200 flex justify-between items-center text-rose-600 font-black text-base">
-                                    <span class="tracking-tight">Total Payable:</span>
-                                    <span class="text-lg">৳<%= order.totalAmount %></span>
-                                </div>
-                            </div>
+                                    <!-- Quick Status Actions -->
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <% 
+                                                let isConfirmDisabled = (currentStatus !== 'Pending');
+                                                let isShippedDisabled = (currentStatus !== 'Confirmed');
+                                                let isDeliveredDisabled = (currentStatus !== 'Shipped');
+                                                const disabledStyle = "opacity-25 pointer-events-none filter grayscale";
+                                            %>
+                                            <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Confirmed', 'confirm')" title="Confirm Order" class="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-500 text-emerald-600 hover:text-white flex items-center justify-center transition shadow-sm cursor-pointer <%= isConfirmDisabled ? disabledStyle : '' %>">
+                                                <i class="fa-solid fa-check text-xs"></i>
+                                            </button>
+                                            <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Shipped', 'ship')" title="Ship Order" class="w-8 h-8 rounded-xl bg-blue-50 hover:bg-blue-500 text-blue-600 hover:text-white flex items-center justify-center transition shadow-sm cursor-pointer <%= isShippedDisabled ? disabledStyle : '' %>">
+                                                <i class="fa-solid fa-truck-fast text-xs"></i>
+                                            </button>
+                                            <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Delivered', 'deliver')" title="Mark Delivered" class="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white flex items-center justify-center transition shadow-sm cursor-pointer <%= isDeliveredDisabled ? disabledStyle : '' %>">
+                                                <i class="fa-solid fa-house-circle-check text-xs"></i>
+                                            </button>
+                                            <button onclick="updateStatus('/admin/orders/delete/<%= order._id %>', 'delete')" title="Delete Order" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-red-500 text-slate-600 hover:text-white flex items-center justify-center transition shadow-sm cursor-pointer">
+                                                <i class="fa-solid fa-trash-can text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
 
-                            <!-- ⚡ Action Step Controllers (Responsive alignment) -->
-                            <div class="w-full lg:w-44 flex flex-row flex-wrap lg:flex-col justify-center items-center gap-2 lg:border-l lg:border-slate-100 lg:pl-4">
-                                <% 
-                                    let isConfirmDisabled = (currentStatus !== 'Pending');
-                                    let isShippedDisabled = (currentStatus !== 'Confirmed');
-                                    let isDeliveredDisabled = (currentStatus !== 'Shipped');
-                                    const disabledStyle = "opacity-25 pointer-events-none filter grayscale saturate-50";
-                                %>
+                                    <!-- View Details (Eye Modal Trigger) -->
+                                    <td class="py-4 px-6 text-right">
+                                        <button onclick="openOrderModal(<%= JSON.stringify(order) %>)" class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-900 text-slate-600 hover:text-white inline-flex items-center justify-center transition shadow-sm cursor-pointer" title="View Details">
+                                            <i class="fa-regular fa-eye text-sm"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="py-16 text-center text-slate-400 font-bold">
+                                    <i class="fa-solid fa-box-open text-4xl mb-2 text-slate-300 block"></i>
+                                    No orders available yet.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-                                <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Confirmed', 'confirm')" 
-                                        class="flex-1 lg:w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer <%= isConfirmDisabled ? disabledStyle : '' %>">
-                                    <i class="fa-solid fa-check-double mr-1"></i> Confirm
-                                </button>
-                                
-                                <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Shipped', 'ship')" 
-                                        class="flex-1 lg:w-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer <%= isShippedDisabled ? disabledStyle : '' %>">
-                                    <i class="fa-solid fa-truck-fast mr-1"></i> Shipped
-                                </button>
+<!-- 📦 Order Details Modal -->
+<div id="orderModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div>
+                <h3 class="font-black text-slate-800 text-base">Order Details</h3>
+                <p id="modalOrderId" class="text-xs font-mono text-indigo-600 font-bold"></p>
+            </div>
+            <button onclick="closeOrderModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-900 hover:text-white text-slate-600 flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
-                                <button onclick="updateStatus('/admin/orders/status/<%= order._id %>?status=Delivered', 'deliver')" 
-                                        class="flex-1 lg:w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer <%= isDeliveredDisabled ? disabledStyle : '' %>">
-                                    <i class="fa-solid fa-house-circle-check mr-1"></i> Delivered
-                                </button>
+        <!-- Modal Body -->
+        <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+            <!-- Customer Details -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1.5">
+                <div class="text-xs font-black uppercase text-slate-400 tracking-wider mb-2">Customer Information</div>
+                <div id="modalCustomerName" class="font-bold text-slate-800 text-sm"></div>
+                <div id="modalCustomerPhone" class="text-xs text-slate-600 font-medium"></div>
+                <div id="modalCustomerAddress" class="text-xs text-slate-500 italic mt-1"></div>
+            </div>
 
-                                <div class="w-full my-0.5 hidden lg:block border-b border-slate-100"></div>
+            <!-- Items List -->
+            <div>
+                <div class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Ordered Products</div>
+                <div id="modalItemsList" class="space-y-3 divide-y divide-slate-100">
+                    <!-- Dynamic Items Injected Here -->
+                </div>
+            </div>
 
-                                <button onclick="updateStatus('/admin/orders/delete/<%= order._id %>', 'delete')" 
-                                        class="w-full lg:w-full bg-slate-100 hover:bg-red-500 text-slate-700 hover:text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer">
-                                    <i class="fa-solid fa-trash-can mr-1"></i> Delete
-                                </button>
-                            </div>
-
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <div class="bg-white rounded-3xl p-20 text-center border border-dashed border-slate-300">
-                        <i class="fa-solid fa-box-open text-6xl text-slate-200 mb-4"></i>
-                        <p class="text-slate-400 font-bold">No orders available yet.</p>
-                    </div>
-                <% } %>
+            <!-- Total Calculation -->
+            <div class="pt-3 border-t-2 border-dashed border-slate-200 flex justify-between items-center text-rose-600 font-black text-base">
+                <span>Total Payable:</span>
+                <span id="modalTotalAmount" class="text-lg"></span>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
 <script>
+    function openOrderModal(order) {
+        document.getElementById('modalOrderId').innerText = '#' + (order.OrderId || order._id.slice(-6));
+        document.getElementById('modalCustomerName').innerText = order.customerInfo.name;
+        document.getElementById('modalCustomerPhone').innerText = '📞 ' + order.customerInfo.phone;
+        document.getElementById('modalCustomerAddress').innerText = '📍 ' + order.customerInfo.address;
+        document.getElementById('modalTotalAmount').innerText = '৳' + order.totalAmount;
+
+        let itemsHTML = '';
+        order.items.forEach(item => {
+            itemsHTML += `
+                <div class="flex items-center justify-between gap-3 pt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 overflow-hidden flex-shrink-0 shadow-sm">
+                            <img src="${item.img || 'https://placehold.co/100x100/e2e8f0/64748b?text=Item'}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 text-xs line-clamp-1">${item.title}</div>
+                            ${item.size ? `<span class="inline-block mt-0.5 text-[9px] font-extrabold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100 uppercase">Size: ${item.size}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <span class="text-[11px] font-bold text-slate-400 block">x${item.quantity}</span>
+                        <span class="text-xs font-bold text-slate-700">৳${item.regularPrice || item.price}</span>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('modalItemsList').innerHTML = itemsHTML;
+        document.getElementById('orderModal').classList.remove('hidden');
+    }
+
+    function closeOrderModal() {
+        document.getElementById('orderModal').classList.add('hidden');
+    }
+
+    // Close modal on outside click
+    document.getElementById('orderModal').addEventListener('click', (e) => {
+        if(e.target === document.getElementById('orderModal')) closeOrderModal();
+    });
+
     function updateStatus(url, type) {
         const config = {
-            confirm: {
-                title: 'অর্ডারটি কনফার্ম করবেন?',
-                text: "কনফার্ম করলে এর পরের 'Shipped' বাটনটি আনলক হবে!",
-                icon: 'question',
-                confirmButtonText: 'হ্যাঁ, কনফার্ম করুন',
-                confirmButtonColor: '#10b981'
-            },
-            ship: {
-                title: 'অর্ডারটি কি কুরিয়ারে পাঠিয়েছেন?',
-                text: "শিপড করলে এর পরের 'Delivered' বাটনটি আনলক হবে!",
-                icon: 'info',
-                confirmButtonText: 'হ্যাঁ, শিপড করুন',
-                confirmButtonColor: '#3b82f6'
-            },
-            deliver: {
-                title: 'অর্ডারটি কি ডেলিভারি সম্পন্ন হয়েছে?',
-                text: "গ্রাহক প্রোডাক্ট পেয়েছে নিশ্চিত হলে 'Delivered' সেট করুন!",
-                icon: 'success',
-                confirmButtonText: 'হ্যাঁ, সফল হয়েছে',
-                confirmButtonColor: '#4f46e5'
-            },
-            delete: {
-                title: 'অর্ডারটি ডিলিট করবেন?',
-                text: "ডিলিট করলে তথ্য আর ফিরে পাওয়া যাবে না!",
-                icon: 'warning',
-                confirmButtonText: 'হ্যাঁ, ডিলিট করুন',
-                confirmButtonColor: '#ef4444'
-            }
+            confirm: { title: 'অর্ডারটি কনফার্ম করবেন?', text: "কনফার্ম করলে এর পরের 'Shipped' বাটনটি আনলক হবে!", icon: 'question', confirmButtonText: 'হ্যাঁ, কনফার্ম করুন', confirmButtonColor: '#10b981' },
+            ship: { title: 'অর্ডারটি কি কুরিয়ারে পাঠিয়েছেন?', text: "শিপড করলে এর পরের 'Delivered' বাটনটি আনলক হবে!", icon: 'info', confirmButtonText: 'হ্যাঁ, শিপড করুন', confirmButtonColor: '#3b82f6' },
+            deliver: { title: 'অর্ডারটি কি ডেলিভারি সম্পন্ন হয়েছে?', text: "গ্রাহক প্রোডাক্ট পেয়েছে নিশ্চিত হলে 'Delivered' সেট করুন!", icon: 'success', confirmButtonText: 'হ্যাঁ, সফল হয়েছে', confirmButtonColor: '#4f46e5' },
+            delete: { title: 'অর্ডারটি ডিলিট করবেন?', text: "ডিলিট করলে তথ্য আর ফিরে পাওয়া যাবে না!", icon: 'warning', confirmButtonText: 'হ্যাঁ, ডিলিট করুন', confirmButtonColor: '#ef4444' }
         };
 
         const current = config[type];
-
         Swal.fire({
             title: current.title,
             text: current.text,
@@ -215,10 +219,8 @@
             cancelButtonText: 'বাতিল',
             reverseButtons: true
         }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
-        })
+            if (result.isConfirmed) window.location.href = url;
+        });
     }
 </script>
 

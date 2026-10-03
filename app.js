@@ -6,14 +6,17 @@ var logger = require('morgan');
 const session = require('express-session');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var adminRouter = require('./routes/admin');
 const favicon = require('serve-favicon');
 const Visitor = require('./models/Visitor'); // আপনার ভিজিটর মডেল পাথ ঠিক করে দেবেন
+// const compression = require('compression');
 
 var app = express();
 
 
 
 
+// app.use(compression()); // ডেটা কম্প্রেস করে দ্রুত পাঠাবে
 
 // গ্লোবাল ভিজিটর ট্র্যাকিং মিডলওয়্যার
 app.use(async (req, res, next) => {
@@ -61,6 +64,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/admin', adminRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,212 +1,120 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="bn" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRENDY WORLD | Premium Fashion</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/stylesheets/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-   <script>
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-
-  async function initWebPushSubscription() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return;
-    }
-
-    try {
-      const register = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
-
-      if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-      }
-
-      if (Notification.permission === 'granted') {
-        const keyRes = await fetch('/vapid-public-key');
-        const { publicKey } = await keyRes.json();
-
-        const subscription = await register.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey)
-        });
-
-        await fetch('/subscribe', {
-          method: 'POST',
-          body: JSON.stringify(subscription),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const notifyCard = document.getElementById('notificationPromptCard');
-        if (notifyCard) notifyCard.style.display = 'none';
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'ধন্যবাদ!',
-            text: 'আপনি সফলভাবে নোটিফিকেশন সাবস্ক্রাইব করেছেন।',
-            timer: 2000,
-            showConfirmButton: false
-        });
-      }
-    } catch (error) {
-      console.error('Push Subscription Setup Error:', error);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // যদি অলরেডি পারমিশন দেওয়া থাকে, অটো সাবস্ক্রাইব রান করবে
-    if (Notification.permission === 'granted') {
-        initWebPushSubscription();
-    }
-
-    const manualBtn = document.getElementById('manualNotifyBtn');
-    if (manualBtn) {
-      manualBtn.addEventListener('click', initWebPushSubscription);
-    }
-  });
-</script>
     <style>
-        html,body{
-            scroll-behavior: smooth;
-        }
-        body { font-family: 'Poppins', sans-serif; scroll-behavior: smooth; overflow-x: hidden; }
-        h1, h2, h3, .brand-font { font-family: 'Montserrat', sans-serif; }
+        body { font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        .brand-font { font-family: 'Montserrat', sans-serif; }
         .royal-red { color: #D2042D; }
         .bg-royal-red { background-color: #D2042D; }
-        
-        #cart-sidebar, #checkout-modal { transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
-        #mobile-menu { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        .product-card:hover .quick-add { transform: translateY(0); opacity: 1; }
-        .input-field { @apply w-full bg-gray-50 border border-gray-200 px-4 py-4 rounded-2xl focus:outline-none focus:border-red-600 mb-4 transition-all text-sm; }
-        .payment-option { @apply border-2 border-gray-100 p-5 rounded-2xl cursor-pointer transition-all flex items-center space-x-4 bg-white hover:border-red-500; }
-        .payment-option.active { @apply border-red-600 bg-red-50 ring-2 ring-red-100; }
         .swiper-pagination-bullet-active { background: #D2042D !important; width: 35px !important; border-radius: 5px !important; }
-        
-        .item-card { @apply group flex flex-col items-center justify-center bg-white p-8 rounded-[35px] border border-gray-100 shadow-sm hover:border-red-500 transition-all duration-300; }
-        .item-icon-box { @apply w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-50 transition-colors; }
-
-        .bg-banner-1 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200'); background-size: cover; background-position: center; }
-        .bg-banner-2 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200'); background-size: cover; background-position: center; }
-        .bg-banner-3 { background: linear-gradient(rgba(20, 20, 20, 0.7), rgba(20, 20, 20, 0.7)), url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200'); background-size: cover; background-position: center; }
-        .bg-banner-4 { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200'); background-size: cover; background-position: center; }
-        .bg-banner-5 { background: linear-gradient(rgba(13, 59, 102, 0.8), rgba(13, 59, 102, 0.8)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200'); background-size: cover; background-position: center; }
+        .bg-banner-1 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200') center/cover; }
+        .bg-banner-2 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200') center/cover; }
+        .bg-banner-3 { background: linear-gradient(rgba(20, 20, 20, 0.7), rgba(20, 20, 20, 0.7)), url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200') center/cover; }
+        .bg-banner-4 { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200') center/cover; }
+        .bg-banner-5 { background: linear-gradient(rgba(13, 59, 102, 0.8), rgba(13, 59, 102, 0.8)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200') center/cover; }
     </style>
 </head>
 <body class="bg-gray-50">
 
+    <!-- Header -->
     <header class="sticky top-0 bg-white/80 backdrop-blur-xl z-50 border-b border-gray-100">
-        <div class="container mx-auto px-1 py-1 md:py-2 flex justify-between items-center">
-            
+        <div class="container mx-auto px-2 py-2 flex justify-between items-center">
             <div class="text-2xl font-black flex gap-1 items-center italic tracking-tighter brand-font cursor-pointer select-none" onclick="location.href='/'">
-               <img src="/twlogo.png" class="w-14" alt=""> TRENDY<span class="royal-red">WORLD</span>
+                <img src="/twlogo.png" class="w-12" alt=""> TRENDY<span class="royal-red">WORLD</span>
             </div>
-            <div class="flex gap-8">
-            <nav class="hidden md:flex items-center space-x-8 font-semibold text-sm text-gray-700">
-                <a href="/" class="hover:text-[#D2042D] transition-colors flex items-center gap-1"><i class="fa-solid fa-house text-xs"></i> Home</a>
-                <a href="/search" class="hover:text-[#D2042D] transition-colors flex items-center gap-1">
-                    <i class="fa fa-search text-xs"></i> Search</a>
-                <a href="/track-order" class="hover:text-[#D2042D] transition-colors flex items-center gap-1"><i class="fa-solid fa-truck-fast text-xs"></i> Track Order</a>
-                <a href="/more" class="hover:text-[#D2042D] transition-colors flex items-center gap-1"><i class="fa-solid fa-ellipsis text-xs"></i> More</a>
-            </nav>
-            
-            <div class="flex items-center space-x-3">
-                <%- include('./cartBtn') %>
-                
-                <button id="menu-toggle-btn" class="md:hidden w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-800 rounded-xl hover:bg-gray-100 active:scale-95 transition-all outline-none">
-                    <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
-                </button>
-            </div>
+            <div class="flex items-center gap-6">
+                <nav class="hidden md:flex items-center gap-6 space-x-6 font-semibold text-sm !text-gray-600">
+                    <a href="/" class="hover:text-royal-red transition flex items-center gap-1.5 text-black"><i class="fa-solid fa-house text-xs"></i> Home</a>
+                    <a href="/search" class="hover:text-royal-red transition flex items-center gap-1.5"><i class="fa fa-search text-xs"></i> Search</a>
+                    <a href="/track-order" class="hover:text-royal-red transition flex items-center gap-1.5"><i class="fa-solid fa-truck-fast text-xs"></i> Track Order</a>
+                    <a href="/more" class="hover:text-royal-red transition flex items-center gap-1.5"><i class="fa-solid fa-ellipsis text-xs"></i> More</a>
+                </nav>
+                <div class="flex items-center space-x-3">
+                    <%- include('./cartBtn') %>
+                    <button id="menu-toggle-btn" class="md:hidden w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl hover:bg-gray-100 active:scale-95 transition">
+                        <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-  
-
-    <!-- Mobile Menu -->
+    <!-- Mobile Menu Overlay & Drawer -->
     <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/40 z-50 hidden opacity-0 transition-opacity duration-300"></div>
-
-    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[280px] bg-white z-[60] shadow-2xl transform translate-x-full flex flex-col justify-between border-l border-gray-100">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[280px] bg-white z-[60] shadow-2xl translate-x-full transition-transform duration-500 ease-out flex flex-col justify-between border-l border-gray-100">
+        <div class="p-5 border-b border-gray-100 flex justify-between items-center">
             <span class="text-xs font-black uppercase text-gray-400 tracking-widest">Navigation</span>
-            <button id="menu-close-btn" class="w-8 h-8 rounded-full bg-gray-50 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-colors">
+            <button id="menu-close-btn" class="w-8 h-8 rounded-full bg-gray-50 hover:bg-red-50 hover:text-royal-red flex items-center justify-center transition">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-
-        <nav class="flex-grow p-6 space-y-4">
-            <a href="/" class="flex items-center space-x-4 p-3 rounded-2xl text-gray-700 font-bold hover:bg-red-50 hover:text-[#D2042D] transition-all group">
-                <div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm transition-colors">
-                    <i class="fa-solid fa-house"></i>
-                </div>
-                <span>Home</span>
-            </a>
-            <a href="/search" class="flex items-center space-x-4 p-3 rounded-2xl text-gray-700 font-bold hover:bg-red-50 hover:text-[#D2042D] transition-all group">
-                <div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm transition-colors">
-                    <i class="fa fa-search text-xs"></i> 
-                </div>
-                <span>Search</span>
-            </a>
-            <a href="/track-order" class="flex items-center space-x-4 p-3 rounded-2xl text-gray-700 font-bold hover:bg-red-50 hover:text-[#D2042D] transition-all group">
-                <div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm transition-colors">
-                    <i class="fa-solid fa-truck-fast"></i>
-                </div>
-                <span>Track Order</span>
-            </a>
-            <a href="/more" class="flex items-center space-x-4 p-3 rounded-2xl text-gray-700 font-bold hover:bg-red-50 hover:text-[#D2042D] transition-all group">
-                <div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm transition-colors">
-                    <i class="fa-solid fa-ellipsis"></i>
-                </div>
-                <span>More</span>
-            </a>
+        <nav class="flex-grow p-6 space-y-3 font-bold text-gray-700">
+            <a href="/" class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-red-50 hover:text-royal-red transition group"><div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-house"></i></div><span>Home</span></a>
+            <a href="/search" class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-red-50 hover:text-royal-red transition group"><div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm"><i class="fa fa-search text-xs"></i></div><span>Search</span></a>
+            <a href="/track-order" class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-red-50 hover:text-royal-red transition group"><div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-truck-fast"></i></div><span>Track Order</span></a>
+            <a href="/more" class="flex items-center space-x-4 p-3 rounded-2xl hover:bg-red-50 hover:text-royal-red transition group"><div class="w-10 h-10 bg-gray-50 group-hover:bg-white rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-ellipsis"></i></div><span>More</span></a>
         </nav>
-
-        <div class="p-6 border-t border-gray-50 bg-gray-50/50">
-            <p class="text-[10px] text-center font-bold tracking-widest text-gray-400 uppercase">TRENDY WORLD © 2026</p>
+        <div class="p-5 border-t border-gray-50 bg-gray-50/50 text-center">
+            <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase">TRENDY WORLD © 2026</p>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
-        const menuToggleBtn = document.getElementById('menu-toggle-btn');
-        const menuCloseBtn = document.getElementById('menu-close-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
-
-        function openMenu() {
-            mobileMenuOverlay.classList.remove('hidden');
-            setTimeout(() => {
-                mobileMenuOverlay.classList.add('opacity-100');
-                mobileMenu.classList.remove('translate-x-full');
-            }, 10);
-            document.body.style.overflow = 'hidden';
+        // Web Push Subscriptions
+        const urlBase64ToUint8Array = b => new Uint8Array([...atob(b.replace(/-/g, '+').replace(/_/g, '/'))].map(c => c.charCodeAt(0)));
+        
+        async function initWebPushSubscription() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            try {
+                const reg = await navigator.serviceWorker.register('/sw.js');
+                await navigator.serviceWorker.ready;
+                if (Notification.permission === 'default') await Notification.requestPermission();
+                if (Notification.permission === 'granted') {
+                    const { publicKey } = await (await fetch('/vapid-public-key')).json();
+                    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
+                    await fetch('/subscribe', { method: 'POST', body: JSON.stringify(sub), headers: { 'Content-Type': 'application/json' } });
+                    document.getElementById('notificationPromptCard')?.style.setProperty('display', 'none');
+                    Swal.fire({ icon: 'success', title: 'ধন্যবাদ!', text: 'আপনি সফলভাবে নোটিফিকেশন সাবস্ক্রাইব করেছেন।', timer: 2000, showConfirmButton: false });
+                }
+            } catch (err) { console.error('Push Error:', err); }
         }
 
-        function closeMenu() {
-            mobileMenu.classList.add('translate-x-full');
-            mobileMenuOverlay.classList.remove('opacity-100');
-            setTimeout(() => {
-                mobileMenuOverlay.classList.add('hidden');
-            }, 400);
-            document.body.style.overflow = '';
-        }
+        if (Notification.permission === 'granted') initWebPushSubscription();
+        document.getElementById('manualNotifyBtn')?.addEventListener('click', initWebPushSubscription);
 
-        menuToggleBtn.addEventListener('click', openMenu);
-        menuCloseBtn.addEventListener('click', closeMenu);
-        mobileMenuOverlay.addEventListener('click', closeMenu);
+        // Mobile Menu Toggle Logic
+        const toggleMenu = (open) => {
+            const overlay = document.getElementById('mobile-menu-overlay');
+            const menu = document.getElementById('mobile-menu');
+            if (open) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+                menu.classList.remove('translate-x-full');
+            } else {
+                menu.classList.add('translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 400);
+            }
+            document.body.style.overflow = open ? 'hidden' : '';
+        };
+
+        document.getElementById('menu-toggle-btn').onclick = () => toggleMenu(true);
+        document.getElementById('menu-close-btn').onclick = () => toggleMenu(false);
+        document.getElementById('mobile-menu-overlay').onclick = () => toggleMenu(false);
     </script>
+</body>
+</html>

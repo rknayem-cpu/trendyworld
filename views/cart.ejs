@@ -32,7 +32,7 @@
                         <span id="final-total">৳0</span>
                     </div>
                 </div>
-                <button onclick="checkIt()" class="w-full bg-red-600 text-white py-4 mt-8 rounded-lg hover:bg-red-700 transition font-bold uppercase tracking-widest">
+                <button onclick="checkIt()" class="w-full cursor-pointer bg-red-600 text-white py-4 mt-8 rounded-lg hover:bg-red-700 transition font-bold uppercase tracking-widest">
                     Checkout Now
                 </button>
             </div>
@@ -76,16 +76,17 @@
                             <p class="text-red-600 font-semibold mb-3">৳${itemPrice.toFixed(2)}</p>
                             
                             <div class="flex items-center border w-fit rounded-lg overflow-hidden bg-gray-50">
-                                <button onclick="updateQty(${index}, -1)" class="px-3 py-1 hover:bg-gray-200 transition font-bold text-gray-600">−</button>
+                                <button onclick="updateQty(${index}, -1)" class="px-3 py-1
+                                 hover:bg-gray-200 transition font-bold text-gray-600 cursor-pointer">−</button>
                                 <span class="px-4 py-1 bg-white font-bold text-gray-800 border-x">${item.quantity}</span>
-                                <button onclick="updateQty(${index}, 1)" class="px-3 py-1 hover:bg-gray-200 transition font-bold text-gray-600">+</button>
+                                <button onclick="updateQty(${index}, 1)" class="px-3 py-1 cursor-pointer hover:bg-gray-200 transition font-bold text-gray-600">+</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto mt-6 md:mt-0 pt-4 md:pt-0 border-t md:border-0">
                         <p class="text-xl font-black text-gray-800">৳${itemTotal.toFixed(2)}</p>
-                        <button onclick="deleteItem(${index})" class="text-sm text-gray-400 hover:text-red-600 transition flex items-center gap-1">
+                        <button onclick="deleteItem(${index})" class="text-sm cursor-pointer text-gray-400 hover:text-red-600 transition flex items-center gap-1">
                             <i class="fa-regular fa-trash-can"></i> Remove
                         </button>
                     </div>

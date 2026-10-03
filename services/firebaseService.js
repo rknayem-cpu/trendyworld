@@ -2,56 +2,27 @@ const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const Subscription = require('../models/Subscription');
 
-let serviceAccount;
+const app = getApps().length ? getApps()[0] : initializeApp({
+    credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
+});
 
-// যদি Vercel-এর Environment Variable থেকে আসে, তবে পার্স করবে
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-} else {
-  // লোকাল পিসির জন্য সরাসরি ফাইল থেকে রিড করবে
-  serviceAccount = require('../serviceAccountKey.json');
-}
+const sendFirebaseNotification = async (title = 'নতুন আপডেট! 📢', body = 'ওয়েবসাইট থেকে পাঠানো নোটিফিকেশন!') => {
+    const subs = await Subscription.find().lean();
+    if (!subs.length) throw new Error('No tokens found.');
 
-let firebaseApp;
-if (!getApps().length) {
-  firebaseApp = initializeApp({
-    credential: cert(serviceAccount)
-  });
-} else {
-  firebaseApp = getApps()[0];
-}
+    const tokens = subs.map(s => s.endpoint);
+    const response = await getMessaging().sendEachForMulticast({ tokens, notification: { title, body } });
 
-const messaging = getMessaging(firebaseApp);
-
-const sendFirebaseNotification = async (title, body) => {
-  const subscriptions = await Subscription.find();
-  
-  if (!subscriptions || subscriptions.length === 0) {
-    throw new Error('No device tokens found in database.');
-  }
-
-  const tokens = subscriptions.map(sub => sub.endpoint);
-
-  const message = {
-    tokens: tokens,
-    notification: {
-      title: title || 'নতুন আপডেট! 📢',
-      body: body || 'ওয়েবসাইট থেকে পাঠানো নোটিফিকেশন!',
-    },
-  };
-
-  const response = await messaging.sendEachForMulticast(message);
-  
-  if (response.failureCount > 0) {
-    response.responses.forEach(async (resp, idx) => {
-      if (!resp.success) {
-        const failedToken = tokens[idx];
-        await Subscription.deleteOne({ endpoint: failedToken });
-      }
-    });
-  }
-
-  return response;
+    if (response.failureCount > 0) {
+        response.responses.forEach(async (r, i) => {
+            if (!r.success) await Subscription.deleteOne({ endpoint: tokens[i] });
+        });
+    }
+    return response;
 };
 
 module.exports = { sendFirebaseNotification };

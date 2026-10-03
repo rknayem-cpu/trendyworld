@@ -1,13 +1,16 @@
 #!/usr/bin/env node
+
+
+
 require('dotenv').config(); 
 var app = require('../app');
 var debug = require('debug')('trendyworld:server');
 var http = require('http');
-
+var connectDB = require('../lib/db')
 /**
  * Get port from environment and store in Express.
  */
-
+connectDB();
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 

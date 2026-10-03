@@ -1,291 +1,170 @@
 <%- include('partials/headr') %>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="container mx-auto px-6 py-12 min-h-screen">
-    
-    <button type="button" onclick="if(document.referrer) { history.back(); } else { location.href='/'; }" class="text-gray-500 hover:text-black transition flex items-center gap-2 mb-8 focus:outline-none cursor-pointer">
+<div class="container mx-auto px-4 sm:px-6 py-8 min-h-screen">
+    <!-- Back Button -->
+    <button onclick="if(document.referrer){history.back();}else{location.href='/'}" class="text-gray-500 hover:text-black transition flex items-center gap-2 mb-6 text-sm font-medium cursor-pointer">
         <i class="fa-solid fa-arrow-left"></i> Back
     </button>
     
-    <div class="flex flex-col lg:flex-row gap-12">
-        
+    <div class="flex flex-col lg:flex-row gap-10 lg:gap-16">
+        <!-- Image Gallery Section -->
         <div class="lg:w-1/2 flex flex-col-reverse lg:flex-row gap-4 select-none">
-            
-            <div id="thumbnailContainer" class="flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto lg:w-24 w-full custom-scrollbar py-1" style="max-height: 480px;">
+            <!-- Thumbnails -->
+            <div id="thumbContainer" class="flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto lg:w-24 w-full custom-scrollbar py-1 max-h-[480px]">
                 <% 
-                    let imageList = [];
-                    if (product.imgUrl) imageList.push(product.imgUrl);
-                    if (product.imgUrl2) imageList.push(product.imgUrl2);
-                    if (product.imgUrl3) imageList.push(product.imgUrl3);
-                    if (product.imgUrl4) imageList.push(product.imgUrl4);
-                    if (product.imgUrl5) imageList.push(product.imgUrl5);
+                    let imgs = [product.imgUrl, product.imgUrl2, product.imgUrl3, product.imgUrl4, product.imgUrl5].filter(Boolean);
                 %>
-                
-                <% imageList.forEach((img, index) => { %>
-                    <div onclick="switchMainImage('<%= img %>', <%= index %>)" 
-                         data-index="<%= index %>"
-                         class="thumbnail-box w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 bg-gray-50 cursor-pointer flex-shrink-0 transition-all duration-200 <%= index === 0 ? 'border-black ring-2 ring-gray-100 shadow-sm' : 'border-gray-200 hover:border-gray-400' %>">
-                        <img src="<%= img %>" alt="Thumbnail <%= index + 1 %>" class="w-full h-full object-cover pointer-events-none">
+                <% imgs.forEach((img, i) => { %>
+                    <div onclick="switchImage('<%= img %>', <%= i %>)" data-index="<%= i %>" 
+                         class="thumb-box w-16 h-16 lg:w-20 lg:h-20 rounded-2xl overflow-hidden border-2 bg-gray-50 cursor-pointer flex-shrink-0 transition-all duration-300 <%= i === 0 ? 'border-black ring-4 ring-gray-100 shadow-md scale-95' : 'border-gray-200 hover:border-gray-400' %>">
+                        <img src="<%= img %>" class="w-full h-full object-cover pointer-events-none">
                     </div>
                 <% }) %>
             </div>
 
-            <div id="mainImageWrapper" class="flex-1 overflow-hidden rounded-3xl bg-gray-50 shadow-sm border h-[320px] sm:h-[450px] lg:h-[480px] relative cursor-grab active:cursor-grabbing">
-                <img id="mainProductDisplayImage" src="<%= product.imgUrl %>" alt="<%= product.title %>"
-                     class="w-full h-full object-cover hover:scale-105 transition duration-500 rounded-3xl pointer-events-none">
-                
-                <div class="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-mono font-bold lg:hidden">
-                    <span id="currentIndexText">1</span>/<%= imageList.length %>
+            <!-- Main Display Box -->
+            <div id="mainWrapper" class="flex-1 overflow-hidden rounded-3xl bg-gray-50 border border-gray-100 shadow-sm h-[360px] sm:h-[450px] lg:h-[480px] relative cursor-grab active:cursor-grabbing">
+                <img id="mainDisplayImg" src="<%= imgs[0] %>" class="w-full h-full object-cover hover:scale-105 transition duration-500 rounded-3xl pointer-events-none">
+                <div class="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-mono font-bold lg:hidden">
+                    <span id="currIdx">1</span>/<%= imgs.length %>
                 </div>
             </div>
-
         </div>
 
-        <div class="lg:w-1/2">
-            <div class="space-y-6">
-                <div class="flex items-center gap-2">
-                    <span class="inline-block px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest rounded-full">
-                        <%= product.category %>
-                    </span>
-                    
-                    <% if (product.isDiscount === true || product.isDiscount === 'true') { 
-                        let regPrice = parseFloat(product.regularPrice) || 0;
-                        let discPrice = parseFloat(product.discountPrice) || 0;
-                        let percentageOff = 0;
-                        
-                        if (regPrice > 0 && discPrice < regPrice) {
-                            percentageOff = Math.round(((regPrice - discPrice) / regPrice) * 100);
-                        }
-                    %>
-                        <span class="inline-block px-3 py-1 bg-red-100 text-red-600 text-xs font-black uppercase tracking-widest rounded-full">
-                            SALE
-                        </span>
-                        <% if (percentageOff > 0) { %>
-                            <span class="inline-block px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-sm animate-pulse">
-                                <%= percentageOff %>% OFF
-                            </span>
-                        <% } %>
+        <!-- Product Details Section -->
+        <div class="lg:w-1/2 space-y-6">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="px-3.5 py-1 bg-orange-50 text-orange-600 text-xs font-bold uppercase tracking-wider rounded-full border border-orange-100">
+                    <%= product.category %>
+                </span>
+                <% let hasDisc = product.isDiscount === true || product.isDiscount === 'true'; %>
+                <% if (hasDisc) { %>
+                    <span class="px-3.5 py-1 bg-red-50 text-red-600 text-xs font-black uppercase tracking-wider rounded-full border border-red-100">SALE</span>
+                    <% let off = Math.round(((product.regularPrice - product.discountPrice) / product.regularPrice) * 100); %>
+                    <% if (off > 0) { %>
+                        <span class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-sm animate-pulse"><%= off %>% OFF</span>
                     <% } %>
-                </div>
-
-                <h1 class="text-4xl font-extrabold text-gray-900 leading-tight">
-                    <%= product.title %>
-                </h1>
-
-                <div class="flex items-baseline gap-4">
-                    <% 
-                        let hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
-                        let activePrice = hasDiscount ? product.discountPrice : product.regularPrice;
-                    %>
-                    <p class="text-3xl font-black text-red-600">
-                        ৳<%= Number(activePrice).toLocaleString() %>
-                    </p>
-                    
-                    <% if (hasDiscount) { %>
-                        <p class="text-lg text-gray-400 line-through font-medium">
-                            ৳<%= Number(product.regularPrice).toLocaleString() %>
-                        </p>
-                    <% } %>
-                    
-                    <span class="text-green-600 font-semibold text-sm bg-green-50 px-2 py-1 rounded ml-2">In Stock</span>
-                </div>
-
-                <!-- 🏷️ 🌟 ONLY SHOW SIZES (ইউজার এখানে ক্লিক করবে না, শুধু দেখবে) -->
-                <% if (product.sizes && product.sizes.length > 0) { %>
-                    <div class="border-t pt-4">
-                        <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2.5">Available Sizes:</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            <% product.sizes.forEach(size => { %>
-                                <span class="px-3.5 py-1.5 bg-gray-100 border border-gray-200 text-xs font-bold rounded-lg text-gray-800 select-none uppercase">
-                                    <%= size %>
-                                </span>
-                            <% }) %>
-                        </div>
-                    </div>
                 <% } %>
+            </div>
 
-                <div class="border-t border-b py-6 text-gray-600 leading-relaxed">
-                    <h4 class="text-sm font-bold text-gray-900 uppercase mb-2">Description</h4>
-                    <p class="whitespace-pre-line text-sm text-gray-600">
-                        <%= product.content %>
-                    </p>
-                </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight"><%= product.title %></h1>
 
-                <div class="md:flex flex-col sm:flex-row gap-4 pt-4 hidden ">
-                    <button
-                        onclick="addToCart('<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')"
-                        class="flex-1 bg-black text-white py-4 px-8 rounded-full font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                    </button>
-                    <button
-                                            onclick="buyNow('<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')"
+            <div class="flex items-baseline gap-4">
+                <% let activePrice = hasDisc ? product.discountPrice : product.regularPrice; %>
+                <p class="text-3xl font-black text-red-600">৳<%= Number(activePrice).toLocaleString() %></p>
+                <% if (hasDisc) { %>
+                    <p class="text-lg text-gray-400 line-through font-medium">৳<%= Number(product.regularPrice).toLocaleString() %></p>
+                <% } %>
+                <span class="text-emerald-600 font-medium text-xs bg-emerald-50 px-2.5 py-1 rounded-full ml-auto border border-emerald-100 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> In Stock</span>
+            </div>
 
-                        class="flex-1 bg-green-500 text-white py-4 px-8 rounded-full font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cart-plus"></i> Buy Now
-                    </button>
-
-                    <button class="p-4 border border-gray-200 rounded-full hover:bg-gray-50 transition cursor-pointer">
-                        <i class="fa-regular fa-heart text-xl"></i>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 pt-8">
-                    <div class="flex items-center gap-3 text-sm text-gray-500">
-                        <i class="fa-solid fa-truck-fast text-gray-800"></i> Fast Delivery
-                    </div>
-                    <div class="flex items-center gap-3 text-sm text-gray-500">
-                        <i class="fa-solid fa-rotate-left text-gray-800"></i> 7 Days Return
+            <% if (product.sizes?.length) { %>
+                <div class="border-t border-gray-100 pt-4">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2.5">Available Sizes:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <% product.sizes.forEach(size => { %>
+                            <span class="px-4 py-1.5 bg-gray-50 border border-gray-200 text-xs font-bold rounded-xl text-gray-800 select-none uppercase"><%= size %></span>
+                        <% }) %>
                     </div>
                 </div>
+            <% } %>
+
+            <div class="border-t border-b border-gray-100 py-6 text-gray-600 leading-relaxed">
+                <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">Description</h4>
+                <p class="whitespace-pre-line text-sm text-gray-600"><%= product.content %></p>
+            </div>
+
+            <!-- Desktop Action Buttons -->
+            <div class="hidden md:flex gap-4 pt-2">
+                <button onclick="handleCart('add', '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')" class="flex-1 bg-black text-white py-4 px-8 rounded-2xl font-bold uppercase tracking-wider hover:bg-gray-800 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 cursor-pointer text-sm">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </button>
+                <button onclick="handleCart('buy', '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')" class="flex-1 bg-emerald-600 text-white py-4 px-8 rounded-2xl font-bold uppercase tracking-wider hover:bg-emerald-700 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 cursor-pointer text-sm">
+                    <i class="fa-solid fa-bolt"></i> Buy Now
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                <div class="flex items-center gap-3 text-xs font-medium text-gray-500"><i class="fa-solid fa-truck-fast text-gray-900 text-base"></i> Fast Home Delivery</div>
+                <div class="flex items-center gap-3 text-xs font-medium text-gray-500"><i class="fa-solid fa-rotate-left text-gray-900 text-base"></i> 7 Days Easy Return</div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Mobile Sticky Bottom Bar -->
+<div class="flex gap-3 fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md p-3 border-t border-gray-100 md:hidden z-50 shadow-2xl">
+    <button onclick="handleCart('buy', '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')" class="flex-1 bg-emerald-600 text-white py-3.5 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md">
+        <i class="fa-solid fa-bolt"></i> Buy Now
+    </button>
+    <button onclick="handleCart('add', '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')" class="flex-1 bg-black text-white py-3.5 rounded-xl font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md">
+        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+    </button>
+</div>
 
-
-
-<div class="flex gap-1 pt-4 sticky bottom-0 w-full h-16 bg-white p-2 md:hidden">
-                    
-                    <button
-                                            onclick="buyNow('<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')"
-
-                        class="flex-1 bg-green-500 text-white py-0 px-1 rounded-full
-                         font-bold uppercase tracking-widest hover:bg-gray-800
-                          transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cart-plus"></i> Buy
-                    </button>
-<button
-                        onclick="addToCart('<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= activePrice %>', '<%= product.imgUrl %>', '<%= product.category %>')"
-                        class="flex-1 bg-black text-white py-0 px-1 rounded-full 
-                        font-bold uppercase tracking-widest hover:bg-gray-800 
-                        transition shadow-lg flex items-center justify-center gap-2
-                         cursor-pointer">
-                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                    </button>
-                    <!-- <button class="p-4 border border-gray-200 rounded-full hover:bg-gray-50 transition cursor-pointer">
-                        <i class="fa-regular fa-heart text-xl"></i>
-                    </button> -->
-                </div>
 <style>
     .custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 </style>
 
 <script>
-    const images = <%- JSON.stringify(imageList) %>;
-    let globalActiveIndex = 0;
+    const imgs = <%- JSON.stringify(imgs) %>;
+    let activeIdx = 0;
 
-    function switchMainImage(imageUrl, index) {
-        globalActiveIndex = index;
-        const mainDisplay = document.getElementById('mainProductDisplayImage');
-        mainDisplay.src = imageUrl;
+    function switchImage(url, idx) {
+        activeIdx = idx;
+        document.getElementById('mainDisplayImg').src = url;
+        const curr = document.getElementById('currIdx');
+        if(curr) curr.innerText = idx + 1;
 
-        const indicator = document.getElementById('currentIndexText');
-        if(indicator) indicator.innerText = index + 1;
-
-        document.querySelectorAll('.thumbnail-box').forEach(box => {
-            box.classList.remove('border-black', 'ring-2', 'ring-gray-100', 'shadow-sm');
-            box.classList.add('border-gray-200');
+        document.querySelectorAll('.thumb-box').forEach(b => {
+            b.classList.remove('border-black', 'ring-4', 'ring-gray-100', 'shadow-md', 'scale-95');
+            b.classList.add('border-gray-200');
         });
-
-        const targetBox = document.querySelector(`.thumbnail-box[data-index="${index}"]`);
-        if (targetBox) {
-            targetBox.classList.remove('border-gray-200');
-            targetBox.classList.add('border-black', 'ring-2', 'ring-gray-100', 'shadow-sm');
-            targetBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        const target = document.querySelector(`.thumb-box[data-index="${idx}"]`);
+        if(target) {
+            target.classList.remove('border-gray-200');
+            target.classList.add('border-black', 'ring-4', 'ring-gray-100', 'shadow-md', 'scale-95');
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
     }
 
-    // INTERACTIVE GESTURE SYSTEM CODE BLOCK
-    const viewPortWrapper = document.getElementById('mainImageWrapper');
-    let startX = 0; let endX = 0; let isDragging = false;
+    // Swipe Gesture Support
+    const wrapper = document.getElementById('mainWrapper');
+    let sX = 0, eX = 0, isDrag = false;
+    wrapper.addEventListener('touchstart', e => sX = e.touches[0].clientX, {passive: true});
+    wrapper.addEventListener('touchend', e => { eX = e.changedTouches[0].clientX; handleSwipe(); }, {passive: true});
+    wrapper.addEventListener('mousedown', e => { sX = e.clientX; isDrag = true; });
+    wrapper.addEventListener('mouseup', e => { if(!isDrag)return; eX = e.clientX; isDrag = false; handleSwipe(); });
 
-    viewPortWrapper.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
-    viewPortWrapper.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; handleSwipeGestureDetection(); }, { passive: true });
-    viewPortWrapper.addEventListener('mousedown', (e) => { startX = e.clientX; isDragging = true; });
-    viewPortWrapper.addEventListener('mouseup', (e) => { if (!isDragging) return; endX = e.clientX; isDragging = false; handleSwipeGestureDetection(); });
-    viewPortWrapper.addEventListener('mouseleave', () => { isDragging = false; });
-
-    function handleSwipeGestureDetection() {
-        const threshold = 50; const difference = startX - endX;
-        if (Math.abs(difference) > threshold) {
-            if (difference > 0) {
-                if (globalActiveIndex < images.length - 1) { globalActiveIndex++; switchMainImage(images[globalActiveIndex], globalActiveIndex); }
-            } else {
-                if (globalActiveIndex > 0) { globalActiveIndex--; switchMainImage(images[globalActiveIndex], globalActiveIndex); }
-            }
+    function handleSwipe() {
+        const diff = sX - eX;
+        if(Math.abs(diff) > 50) {
+            if(diff > 0 && activeIdx < imgs.length - 1) switchImage(imgs[++activeIdx], activeIdx);
+            else if(diff < 0 && activeIdx > 0) switchImage(imgs[--activeIdx], activeIdx);
         }
     }
 
+    // Combined Cart & Buy Handler
+    function handleCart(action, id, title, regularPrice, img, category) {
+        const sizes = <%- product.sizes?.length ? JSON.stringify(product.sizes) : '[]' %>;
+        if(action === 'buy') {
+            localStorage.setItem('checkoutItem', JSON.stringify({ id, title, regularPrice: parseFloat(regularPrice) || 0, img, category, sizes, selectedSize: '', quantity: 1 }));
+            localStorage.setItem('isDirectCheckout', 'true');
+            return location.href = '/checkout';
+        }
 
-function buyNow(id, title, regularPrice, img, category) {
-        const availableSizes = <%- product.sizes && product.sizes.length > 0 ? JSON.stringify(product.sizes) : '[]' %>;
-        
-        // সিঙ্গেল বাই নাউ এর জন্য আলাদা অবজেক্ট তৈরি করা হলো
-        const singleBuyItem = {
-            id,
-            title,
-            regularPrice: parseFloat(regularPrice) || 0,
-            img,
-            category,
-            sizes: availableSizes,
-            selectedSize: '',
-            quantity: 1
-        };
-
-        // আলাদা মেমরিতে সেভ করা যাতে কার্ট থেকে আলাদা থাকে
-        localStorage.setItem('checkoutItem', JSON.stringify(singleBuyItem));
-        localStorage.setItem('isDirectCheckout', 'true'); // ফ্ল্যাগ সেট করা হলো যে এটি বাই নাউ থেকে এসেছে
-
-        // সরাসরি চেকআউট পেজে রিডাইরেক্ট
-        window.location.href = '/checkout';
-    }
-
-
-
-
-    // 📦 Local storage cart injector function
-    function addToCart(id, title, regularPrice, img, category) {
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        const existingItem = cart.find(item => item.id === id);
-
-        if (existingItem) {
-            existingItem.quantity += 1;
-            Swal.fire({
-                title: 'Already in Cart!',
-                text: "Product quantity increased. Go to cart to review your list.",
-                icon: 'info',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#000000'
-            });
+        const item = cart.find(i => i.id === id);
+        if(item) {
+            item.quantity += 1;
+            Swal.fire({ title: 'Already in Cart!', text: "Quantity increased.", icon: 'info', confirmButtonColor: '#000' });
         } else {
-            // ডাটাবেজের 'sizes' অ্যারেটি সরাসরি কার্ট মেমরিতে পুশ করে দেওয়া হচ্ছে 
-            const availableSizes = <%- product.sizes && product.sizes.length > 0 ? JSON.stringify(product.sizes) : '[]' %>;
-            
-            cart.push({ 
-                id, 
-                title, 
-                regularPrice, 
-                img, 
-                category,
-                sizes: availableSizes, // চেকআউটে সাইজ জেনারেট করার জন্য এই ডাটা পাস করতে হবে
-                selectedSize: '',      // ইউজার চেকআউটে গিয়ে এটা সিলেক্ট করবে
-                quantity: 1 
-            });
-
-            Swal.fire({
-                title: 'Success!',
-                text: "Product added to your shopping cart.",
-                icon: 'success',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#D2042D'
-            });
+            cart.push({ id, title, regularPrice: parseFloat(regularPrice) || 0, img, category, sizes, selectedSize: '', quantity: 1 });
+            Swal.fire({ title: 'Success!', text: "Product added to cart.", icon: 'success', confirmButtonColor: '#000' });
         }
-
         localStorage.setItem('cart', JSON.stringify(cart));
         window.dispatchEvent(new CustomEvent('cartUpdated'));
     }
