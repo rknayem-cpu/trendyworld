@@ -26,7 +26,7 @@ app.use(async (req, res, next) => {
 
   try {
     // ১. সবার আগে ডেটাবেজ কানেকশন নিশ্চিত করুন
-    await connectDB();
+  connectDB();
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const today = new Date().toISOString().split('T')[0];
