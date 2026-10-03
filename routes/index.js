@@ -38,11 +38,7 @@ router.post('/send-notification', async (req, res) => {
     }
 });
 
-// Admin Middleware
-const isAdmin = (req, res, next) => {
-    if (req.session?.adminVerified) return next();
-    res.redirect('/admin/login');
-};
+
 
 // Today Visitors Stats
 router.get('/stats/today-visitors', async (req, res) => {

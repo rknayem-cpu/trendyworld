@@ -10,7 +10,7 @@ var adminRouter = require('./routes/admin');
 const favicon = require('serve-favicon');
 const Visitor = require('./models/Visitor'); // আপনার ভিজিটর মডেল পাথ ঠিক করে দেবেন
 // const compression = require('compression');
-
+const connectDB = require('../lib/db'); 
 var app = express();
 
 
@@ -18,18 +18,20 @@ var app = express();
 
 // app.use(compression()); // ডেটা কম্প্রেস করে দ্রুত পাঠাবে
 
-// গ্লোবাল ভিজিটর ট্র্যাকিং মিডলওয়্যার
 app.use(async (req, res, next) => {
-  // স্ট্যাটিক ফাইল (যেমন: css, js, images, favicon) বা API কল বাদ দিয়ে শুধু পেজ ভিজিট ট্র্যাক করার জন্য
+  // স্ট্যাটিক ফাইল বা নির্দিষ্ট পাথ বাদ দিন
   if (req.path.startsWith('/stylesheets') || req.path.startsWith('/javascripts') || req.path.startsWith('/images') || req.path.startsWith('/stats')) {
     return next();
   }
 
   try {
+    // ১. সবার আগে ডেটাবেজ কানেকশন নিশ্চিত করুন
+    await connectDB();
+
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const today = new Date().toISOString().split('T')[0];
 
-    // ডাটাবেজে সেভ (এক দিনে একই আইপি একবারই কাউন্ট হবে)
+    // ২. ডেটাবেজে সেভ করুন
     await Visitor.updateOne(
       { ip: clientIp, date: today },
       { $setOnInsert: { ip: clientIp, date: today } },
