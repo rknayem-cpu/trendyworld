@@ -18,31 +18,31 @@ var app = express();
 
 // app.use(compression()); // ডেটা কম্প্রেস করে দ্রুত পাঠাবে
 
-app.use(async (req, res, next) => {
-  // স্ট্যাটিক ফাইল বা নির্দিষ্ট পাথ বাদ দিন
-  if (req.path.startsWith('/stylesheets') || req.path.startsWith('/javascripts') || req.path.startsWith('/images') || req.path.startsWith('/stats')) {
-    return next();
-  }
+// app.use(async (req, res, next) => {
+//   // স্ট্যাটিক ফাইল বা নির্দিষ্ট পাথ বাদ দিন
+//   if (req.path.startsWith('/stylesheets') || req.path.startsWith('/javascripts') || req.path.startsWith('/images') || req.path.startsWith('/stats')) {
+//     return next();
+//   }
 
-  try {
-    // ১. সবার আগে ডেটাবেজ কানেকশন নিশ্চিত করুন
-  connectDB();
+//   try {
+//     // ১. সবার আগে ডেটাবেজ কানেকশন নিশ্চিত করুন
+//   connectDB();
 
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const today = new Date().toISOString().split('T')[0];
+//     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+//     const today = new Date().toISOString().split('T')[0];
 
-    // ২. ডেটাবেজে সেভ করুন
-    await Visitor.updateOne(
-      { ip: clientIp, date: today },
-      { $setOnInsert: { ip: clientIp, date: today } },
-      { upsert: true }
-    );
-  } catch (error) {
-    console.error('Middleware visitor tracking error:', error);
-  }
+//     // ২. ডেটাবেজে সেভ করুন
+//     await Visitor.updateOne(
+//       { ip: clientIp, date: today },
+//       { $setOnInsert: { ip: clientIp, date: today } },
+//       { upsert: true }
+//     );
+//   } catch (error) {
+//     console.error('Middleware visitor tracking error:', error);
+//   }
 
-  next(); // পরবর্তী রাউটে যেতে দিন
-});
+//   next(); // পরবর্তী রাউটে যেতে দিন
+// });
 
 
 
