@@ -10,7 +10,6 @@ var adminRouter = require('./routes/admin');
 const favicon = require('serve-favicon');
 const Visitor = require('./models/Visitor'); // আপনার ভিজিটর মডেল পাথ ঠিক করে দেবেন
 // const compression = require('compression');
-const connectDB = require('./lib/db'); 
 var app = express();
 
 
