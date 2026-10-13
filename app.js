@@ -9,6 +9,7 @@ var usersRouter = require('./routes/users');
 var adminRouter = require('./routes/admin');
 const favicon = require('serve-favicon');
 const Visitor = require('./models/Visitor'); 
+const MongoStore = require('connect-mongo');
 const connectDB = require('./lib/db')// আপনার ভিজিটর মডেল পাথ ঠিক করে দেবেন
 // const compression = require('compression');
 var app = express();
@@ -53,10 +54,18 @@ app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(session({
-    secret: 'sagotom_secret_key_123', // আপনার ইচ্ছামতো একটি স্ট্রং সিক্রেট কি দিন
+    secret: 'trendy123',
     resave: false,
-    saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // ২৪ ঘণ্টা সেশন ভ্যালিডিটি
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URL, // আপনার ডাটাবেজের কানেকশন ইউআরআই (যেমনটা mongoose-এ ব্যবহার করেন)
+        ttl: 14 * 24 * 60 * 60 // সেশন কতদিন থাকবে (১৪ দিন)
+    }),
+    cookie: { 
+        maxAge: 1000 * 60 * 60 * 24 * 14, // ১৪ দিন
+        secure: process.env.NODE_ENV === 'production', // প্রোডাকশনে (Vercel) HTTPS এনফোর্স করতে
+        sameSite: 'lax'
+    }
 }));
 app.use(logger('dev'));
 app.use(express.json());
