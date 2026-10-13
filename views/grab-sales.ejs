@@ -34,6 +34,7 @@
 <script>
     // Server database side array list read
     const databaseProducts = <%- JSON.stringify(posts) %> || [];
+    const allProducts = <%- JSON.stringify(posts) %>;
     const limitedGrid = document.getElementById('limited-grid');
     const emptyLimitedState = document.getElementById('empty-limited-state');
 
@@ -102,7 +103,8 @@
                                 </span>
                             </div>
                             
-                            <button onclick="addToCart('${product._id}', '${product.title.replace(/'/g, "\\'")}', '${displayPrice}', '${product.imgUrl}')" 
+                            <button 
+                            onclick="addToCart('${product._id}')"
                                     class="w-10 h-10 rounded-2xl bg-gray-900 text-white hover:bg-amber-600 flex items-center justify-center transition-all duration-300 active:scale-90 shadow-sm hover:shadow-md">
                                 <i class="fa-solid fa-basket-shopping text-sm"></i>
                             </button>
@@ -114,33 +116,56 @@
     }
 
     // Local Storage synchronized Add To Cart operation wrapper logic
-    function addToCart(id, title, regularPrice, img) {
+     function addToCart(id) {
+        const product = allProducts.find(p => p._id === id);
+        if (!product) return;
+
+        const hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
+        const displayPrice = hasDiscount ? product.discountPrice : product.regularPrice;
+
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         const existingItem = cart.find(item => item.id === id);
 
         if (existingItem) {
             existingItem.quantity += 1;
             Swal.fire({
-                title: 'Quantity Updated',
-                text: "Exclusive product quantity increased in active cart list.",
+                title: 'Quantity Updated!',
+                text: `Product is already in cart, so updated quantity.`,
                 icon: 'info',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#000000'
+                toast: true,
+                position: window.innerWidth < 768 ? 'top-enter' : 'top-end',
+                showConfirmButton: false,
+                timer: 600,
+                timerProgressBar: true
             });
         } else {
-            cart.push({ id, title, regularPrice, img, quantity: 1 });
+            cart.push({ 
+                id: product._id, 
+                title: product.title, 
+                regularPrice: displayPrice, 
+                img: product.imgUrl, 
+                category: product.category,
+                quantity: 1, 
+                sizes: product.sizes || [], 
+                selectedSize: '' 
+            });
+
             Swal.fire({
-                title: 'Premium Drop Claimed!',
-                text: "Limited collection added safely to shopping basket.",
+                title: 'Success!',
+                text: `Product has been added to your shopping cart.`,
                 icon: 'success',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#d97706' // Synced amber golden notification button
+                toast: true,
+                position: window.innerWidth < 768 ? 'top' : 'top-end',
+                showConfirmButton: false,
+                timer: 600,
+                timerProgressBar: true
             });
         }
 
         localStorage.setItem('cart', JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent('cartUpdated')); // Global header counts alert sync
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
     }
+
 </script>
 
 <%- include('partials/footer') %>

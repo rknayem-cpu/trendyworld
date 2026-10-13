@@ -34,6 +34,7 @@
 <script>
     // Server framework pass kora 'posts' stack read kora hocche
     const serverProducts = <%- JSON.stringify(posts) %> || [];
+      const allProducts = <%- JSON.stringify(posts) %>;
     const discountGrid = document.getElementById('discount-grid');
     const emptyDiscountState = document.getElementById('empty-discount-state');
 
@@ -106,7 +107,10 @@
                                 </span>
                             </div>
                             
-                            <button onclick="addToCart('${product._id}', '${product.title.replace(/'/g, "\\'")}', '${displayPrice}', '${product.imgUrl}')" 
+                            <button 
+                            
+                            
+                             onclick="addToCart('${product._id}')"
                                     class="w-10 h-10 rounded-2xl bg-gray-50 text-gray-800 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all duration-300 active:scale-90 shadow-sm hover:shadow-md">
                                 <i class="fa-solid fa-basket-shopping text-sm"></i>
                             </button>
@@ -118,33 +122,56 @@
     }
 
     // Local Storage synchronized Add To Cart system logic
-    function addToCart(id, title, regularPrice, img) {
+   function addToCart(id) {
+        const product = allProducts.find(p => p._id === id);
+        if (!product) return;
+
+        const hasDiscount = product.isDiscount === true || product.isDiscount === 'true';
+        const displayPrice = hasDiscount ? product.discountPrice : product.regularPrice;
+
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         const existingItem = cart.find(item => item.id === id);
 
         if (existingItem) {
             existingItem.quantity += 1;
             Swal.fire({
-                title: 'Quantity Increased!',
-                text: "Product count updated inside active cart.",
+                title: 'Quantity Updated!',
+                text: `Product is already in cart, so updated quantity.`,
                 icon: 'info',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#000000'
+                toast: true,
+                position: window.innerWidth < 768 ? 'top-enter' : 'top-end',
+                showConfirmButton: false,
+                timer: 600,
+                timerProgressBar: true
             });
         } else {
-            cart.push({ id, title, regularPrice, img, quantity: 1 });
+            cart.push({ 
+                id: product._id, 
+                title: product.title, 
+                regularPrice: displayPrice, 
+                img: product.imgUrl, 
+                category: product.category,
+                quantity: 1, 
+                sizes: product.sizes || [], 
+                selectedSize: '' 
+            });
+
             Swal.fire({
-                title: 'Discounted Deal Added!',
-                text: "Product successfully pushed to active basket list.",
+                title: 'Success!',
+                text: `Product has been added to your shopping cart.`,
                 icon: 'success',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#D2042D'
+                toast: true,
+                position: window.innerWidth < 768 ? 'top' : 'top-end',
+                showConfirmButton: false,
+                timer: 600,
+                timerProgressBar: true
             });
         }
 
         localStorage.setItem('cart', JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent('cartUpdated')); // Broadcast global event navbar count updates
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
     }
+
 </script>
 
 <%- include('partials/footer') %>

@@ -13,6 +13,10 @@
 
         <!-- Product Grid Container -->
         <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+
+            <div id="simple-loader" class="col-span-full text-center py-12">
+        <p class="text-sm font-bold tracking-widest text-gray-400 animate-pulse">Loading products...</p>
+    </div>
             <!-- Products will be appended here via JavaScript -->
         </div>
 
@@ -137,25 +141,28 @@
 
     // Dynamic slicer running allocations using configurations parameters
     function loadNextBatch() {
-        const nextBatch = allProducts.slice(currentIndex, currentIndex + productsPerPage);
-        const htmlMarkup = nextBatch.map(product => createProductCardMarkup(product)).join('');
-        
-        productGrid.insertAdjacentHTML('beforeend', htmlMarkup);
-        currentIndex += nextBatch.length;
+    // প্রোডাক্ট আসার সাথে সাথে লোডিং টেক্সট ডিলিট হয়ে যাবে
+    const loader = document.getElementById('simple-loader');
+    if (loader) loader.remove();
 
-        setTimeout(() => {
-            document.querySelectorAll('.product-card-fade').forEach(card => {
-                card.classList.remove('opacity-0', 'translate-y-4');
-            });
-        }, 50);
+    const nextBatch = allProducts.slice(currentIndex, currentIndex + productsPerPage);
+    const htmlMarkup = nextBatch.map(product => createProductCardMarkup(product)).join('');
+    
+    productGrid.insertAdjacentHTML('beforeend', htmlMarkup);
+    currentIndex += nextBatch.length;
 
-        if (currentIndex >= allProducts.length) {
-            loadMoreContainer.classList.add('hidden');
-        } else {
-            loadMoreContainer.classList.remove('hidden');
-        }
+    setTimeout(() => {
+        document.querySelectorAll('.product-card-fade').forEach(card => {
+            card.classList.remove('opacity-0', 'translate-y-4');
+        });
+    }, 50);
+
+    if (currentIndex >= allProducts.length) {
+        loadMoreContainer.classList.add('hidden');
+    } else {
+        loadMoreContainer.classList.remove('hidden');
     }
-
+}
 
 
 
@@ -229,7 +236,7 @@
                 text: `Product has been added to your shopping cart.`,
                 icon: 'success',
                 toast: true,
-                position: window.innerWidth < 768 ? 'top-center' : 'top-end',
+                position: window.innerWidth < 768 ? 'top' : 'top-end',
                 showConfirmButton: false,
                 timer: 600,
                 timerProgressBar: true

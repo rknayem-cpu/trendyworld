@@ -19,15 +19,44 @@
         .brand-font { font-family: 'Montserrat', sans-serif; }
         .royal-red { color: #D2042D; }
         .bg-royal-red { background-color: #D2042D; }
-        .swiper-pagination-bullet-active { background: #D2042D !important; width: 35px !important; border-radius: 5px !important; }
+        .swiper-pagination-bullet-active { background: #D2042D !important; 
+            width: 35px !important; border-radius: 5px !important; }
         .bg-banner-1 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200') center/cover; }
         .bg-banner-2 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200') center/cover; }
         .bg-banner-3 { background: linear-gradient(rgba(20, 20, 20, 0.7), rgba(20, 20, 20, 0.7)), url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200') center/cover; }
         .bg-banner-4 { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200') center/cover; }
         .bg-banner-5 { background: linear-gradient(rgba(13, 59, 102, 0.8), rgba(13, 59, 102, 0.8)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200') center/cover; }
+    
+    @keyframes logo-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-logo-rotate {
+    animation: logo-rotate 2s linear infinite; /* ২ সেকেন্ডে একবার ঘুরবে */
+}
+    
     </style>
 </head>
 <body class="bg-gray-50">
+
+
+<!-- Full Screen Global Preloader with Rotating Logo -->
+<div id="global-preloader" class="fixed inset-0 z-[99999] flex items-center justify-center bg-white transition-opacity duration-500">
+    <div class="flex flex-col items-center gap-6">
+        
+        <!-- লোগো কন্টেইনার - এখানে আপনার লোগোর লিঙ্ক দিন -->
+        <img src="/twlogo.png" alt="Logo" class="w-20 h-20 object-contain animate-logo-rotate" id="preloader-logo">
+        
+        <!-- অপশনাল: লোগোর নিচে ছোট করে একটা লেখা (না চাইলে বাদ দিতে পারেন) -->
+        
+    </div>
+</div>
+    
 
     <!-- Header -->
     <header class="sticky top-0 bg-white/80 backdrop-blur-xl z-50 border-b border-gray-100">
@@ -75,46 +104,81 @@
     <!-- Scripts -->
     <script>
         // Web Push Subscriptions
-        const urlBase64ToUint8Array = b => new Uint8Array([...atob(b.replace(/-/g, '+').replace(/_/g, '/'))].map(c => c.charCodeAt(0)));
+        // const urlBase64ToUint8Array = b => new Uint8Array([...atob(b.replace(/-/g, '+').replace(/_/g, '/'))].map(c => c.charCodeAt(0)));
         
-        async function initWebPushSubscription() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-            try {
-                const reg = await navigator.serviceWorker.register('/sw.js');
-                await navigator.serviceWorker.ready;
-                if (Notification.permission === 'default') await Notification.requestPermission();
-                if (Notification.permission === 'granted') {
-                    const { publicKey } = await (await fetch('/vapid-public-key')).json();
-                    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
-                    await fetch('/subscribe', { method: 'POST', body: JSON.stringify(sub), headers: { 'Content-Type': 'application/json' } });
-                    document.getElementById('notificationPromptCard')?.style.setProperty('display', 'none');
-                    Swal.fire({ icon: 'success', title: 'ধন্যবাদ!', text: 'আপনি সফলভাবে নোটিফিকেশন সাবস্ক্রাইব করেছেন।', timer: 2000, showConfirmButton: false });
-                }
-            } catch (err) { console.error('Push Error:', err); }
-        }
+        // async function initWebPushSubscription() {
+        //     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        //     try {
+        //         const reg = await navigator.serviceWorker.register('/sw.js');
+        //         await navigator.serviceWorker.ready;
+        //         if (Notification.permission === 'default') await Notification.requestPermission();
+        //         if (Notification.permission === 'granted') {
+        //             const { publicKey } = await (await fetch('/vapid-public-key')).json();
+        //             const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
+        //             await fetch('/subscribe', { method: 'POST', body: JSON.stringify(sub), headers: { 'Content-Type': 'application/json' } });
+        //             document.getElementById('notificationPromptCard')?.style.setProperty('display', 'none');
+        //             Swal.fire({ icon: 'success', title: 'ধন্যবাদ!', text: 'আপনি সফলভাবে নোটিফিকেশন সাবস্ক্রাইব করেছেন।', timer: 2000, showConfirmButton: false });
+        //         }
+        //     } catch (err) { console.error('Push Error:', err); }
+        // }
 
-        if (Notification.permission === 'granted') initWebPushSubscription();
-        document.getElementById('manualNotifyBtn')?.addEventListener('click', initWebPushSubscription);
+        // if (Notification.permission === 'granted') initWebPushSubscription();
+        // document.getElementById('manualNotifyBtn')?.addEventListener('click', initWebPushSubscription);
 
-        // Mobile Menu Toggle Logic
-        const toggleMenu = (open) => {
-            const overlay = document.getElementById('mobile-menu-overlay');
-            const menu = document.getElementById('mobile-menu');
-            if (open) {
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.add('opacity-100'), 10);
-                menu.classList.remove('translate-x-full');
-            } else {
-                menu.classList.add('translate-x-full');
-                overlay.classList.remove('opacity-100');
-                setTimeout(() => overlay.classList.add('hidden'), 400);
-            }
-            document.body.style.overflow = open ? 'hidden' : '';
-        };
+        // // Mobile Menu Toggle Logic
+        // const toggleMenu = (open) => {
+        //     const overlay = document.getElementById('mobile-menu-overlay');
+        //     const menu = document.getElementById('mobile-menu');
+        //     if (open) {
+        //         overlay.classList.remove('hidden');
+        //         setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        //         menu.classList.remove('translate-x-full');
+        //     } else {
+        //         menu.classList.add('translate-x-full');
+        //         overlay.classList.remove('opacity-100');
+        //         setTimeout(() => overlay.classList.add('hidden'), 400);
+        //     }
+        //     document.body.style.overflow = open ? 'hidden' : '';
+        // };
 
         document.getElementById('menu-toggle-btn').onclick = () => toggleMenu(true);
         document.getElementById('menu-close-btn').onclick = () => toggleMenu(false);
         document.getElementById('mobile-menu-overlay').onclick = () => toggleMenu(false);
+
+
+
+
+        // পেজ সম্পূর্ণ লোড হলে প্রি-লোডার বন্ধ হবে
+window.addEventListener('load', () => {
+    hidePreloader();
+});
+
+// ২. ব্রাউজারের ব্যাক (Back) বা ফরোয়ার্ড (Forward) বাটন দিয়ে ফিরলে লোডার আটকে থাকা রোধ করতে
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        hidePreloader();
+    }
+});
+
+// কমন হাইড ফাংশন
+function hidePreloader() {
+    const preloader = document.getElementById('global-preloader');
+    if (preloader) {
+        preloader.style.opacity = '0';
+        setTimeout(() => {
+            preloader.style.display = 'none';
+        }, 800);
+    }
+}
+
+// ৩. এক পেজ থেকে অন্য পেজে যাওয়ার সময় আবার লোডার দেখানোর জন্য
+window.addEventListener('beforeunload', () => {
+    const preloader = document.getElementById('global-preloader');
+    if (preloader) {
+        preloader.style.opacity = '1';
+        preloader.style.display = 'flex';
+    }
+});
     </script>
 </body>
 </html>
